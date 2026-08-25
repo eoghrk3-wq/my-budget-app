@@ -32,6 +32,9 @@
     .month-selector { display: flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.9rem; }
     .month-btn { background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
 
+    /* 디버그 에러 알림바 */
+    #errorBanner { display: none; background: #FEE2E2; color: #DC2626; padding: 10px 16px; font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid #FCA5A5; }
+
     .summary-card { background: var(--card); margin: 14px 16px; padding: 16px; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .balance-title { font-size: 0.75rem; color: var(--subtext); margin-bottom: 2px; }
     .balance-amount { font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; }
@@ -111,7 +114,8 @@
 </head>
 <body>
 
-  <!-- 헤더 -->
+  <div id="errorBanner"></div>
+
   <div class="header">
     <h1>우리가계부 💑</h1>
     <div class="header-actions">
@@ -124,7 +128,6 @@
     </div>
   </div>
 
-  <!-- 상단 요약 카드 -->
   <div class="summary-card">
     <div class="balance-title">이번 달 잔여 (수입 - 총지출)</div>
     <div class="balance-amount" id="netBalance">0원</div>
@@ -136,7 +139,6 @@
     </div>
   </div>
 
-  <!-- 내역 뷰 -->
   <div id="viewLedger">
     <div class="tabs">
       <button class="tab active" onclick="switchFilterTab('ALL', event)">전체</button>
@@ -147,7 +149,6 @@
     <div class="list-container" id="transactionList"></div>
   </div>
 
-  <!-- 통계 뷰 -->
   <div id="viewStats">
     <div class="chart-box">
       <div style="font-size:0.9rem; font-weight:700; margin-bottom:12px;">📊 당월 지출 비중 (도넛 차트)</div>
@@ -162,10 +163,8 @@
     </div>
   </div>
 
-  <!-- 등록 FAB -->
   <button class="fab" onclick="openModal()">+</button>
 
-  <!-- 하단 탭 바 -->
   <div class="bottom-nav">
     <button class="nav-btn active" id="navLedgerBtn" onclick="switchMainView('ledger')">
       <span class="nav-icon">📝</span>
@@ -193,7 +192,6 @@
         <select id="txAuthor" class="form-input"></select>
       </div>
 
-      <!-- 날짜 선택기 -->
       <div class="form-group">
         <label class="form-label">날짜</label>
         <div class="date-picker-row">
@@ -289,12 +287,17 @@
   </div>
 
   <script>
-    const APP_VERSION = '4.5';
+    const APP_VERSION = '5.0';
 
+    // 💡 Supabase 접속 정보 (키가 정확한지 확인해 주세요)
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
-    
-    let supabaseClient = (SUPABASE_URL !== '여기에_SUPABASE_URL_입력') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    let supabaseClient = null;
+    if (SUPABASE_URL && !SUPABASE_URL.includes('여기에')) {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
     let transactions = [];
     let doughnutChartInstance = null;
 
@@ -335,6 +338,14 @@
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
+    function showError(msg) {
+      const b = document.getElementById('errorBanner');
+      if (b) {
+        b.style.display = 'block';
+        b.innerText = '⚠️ ' + msg;
+      }
+    }
+
     async function init() {
       updateMonthText();
       initKoreanDatePicker();
@@ -352,9 +363,7 @@
       const mSelect = document.getElementById('txMonth');
       
       const yearList = [];
-      for (let y = currentYear - 2; y <= currentYear + 2; y++) {
-        yearList.push(y);
-      }
+      for (let y = currentYear - 2; y <= currentYear + 2; y++) yearList.push(y);
       ySelect.innerHTML = yearList.map(y => `<option value="${y}">${y}년</option>`).join('');
       ySelect.value = currentYear;
 
@@ -384,17 +393,16 @@
       return { year: y, month: m, day: d, dateStr: dateStr };
     }
 
-    // 날짜를 YYYY, MM, DD로 정밀 분해
+    // 강력한 정규식 날짜 파서 (모든 DB 날짜 형태 대응)
     function parseDate(dateVal) {
       if (!dateVal) return null;
-      const clean = String(dateVal).split('T')[0].trim();
-      const parts = clean.split('-');
-      if (parts.length >= 3) {
+      const str = String(dateVal);
+      const match = str.match(/(\d{4})[^\d](\d{1,2})[^\d](\d{1,2})/);
+      if (match) {
         return {
-          year: Number(parts[0]),
-          month: Number(parts[1]),
-          day: Number(parts[2].slice(0, 2)),
-          fullStr: `${parts[0]}-${String(Number(parts[1])).padStart(2,'0')}-${String(Number(parts[2].slice(0,2))).padStart(2,'0')}`
+          year: parseInt(match[1], 10),
+          month: parseInt(match[2], 10),
+          day: parseInt(match[3], 10)
         };
       }
       return null;
@@ -402,10 +410,8 @@
 
     function formatKoreanDate(dateVal) {
       const p = parseDate(dateVal);
-      if (p) {
-        return `${p.month}월 ${p.day}일`;
-      }
-      return dateVal;
+      if (p) return `${p.month}월 ${p.day}일`;
+      return String(dateVal);
     }
 
     function switchMainView(view) {
@@ -520,8 +526,7 @@
           animation: 150,
           handle: '.chip-handle',
           onEnd: function () {
-            const newOrder = Array.from(payContainer.children).map(child => child.getAttribute('data-id'));
-            payments = newOrder;
+            payments = Array.from(payContainer.children).map(child => child.getAttribute('data-id'));
             localStorage.setItem('my_ledger_payments', JSON.stringify(payments));
             renderDropdowns();
           }
@@ -535,8 +540,7 @@
           onEnd: function () {
             const flow = container.getAttribute('data-flow');
             const main = container.getAttribute('data-main');
-            const newOrder = Array.from(container.children).map(child => child.getAttribute('data-id'));
-            categoryStructure[flow][main] = newOrder;
+            categoryStructure[flow][main] = Array.from(container.children).map(child => child.getAttribute('data-id'));
             localStorage.setItem('my_category_tree', JSON.stringify(categoryStructure));
             renderDropdowns();
           }
@@ -618,6 +622,7 @@
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
+    // 데이터베이스 조회
     async function loadTransactions() {
       if (!supabaseClient) {
         transactions = JSON.parse(localStorage.getItem('my_ledger_local')) || [];
@@ -626,7 +631,10 @@
           .from('transactions')
           .select('*')
           .order('date', { ascending: false });
-        if (!error && data) {
+        
+        if (error) {
+          showError('DB 조회 실패: ' + error.message);
+        } else if (data) {
           transactions = data;
         }
       }
@@ -661,10 +669,11 @@
           
           newEntries.push({
             date: targetDateStr,
-            flow_type: template.flow_type,
-            type: template.flow_type,
+            flow_type: template.flow_type || template.type,
+            type: template.flow_type || template.type,
             main_category: template.main_category,
             sub_category: template.sub_category,
+            category: `${template.main_category || ''} > ${template.sub_category || ''}`,
             title: template.title,
             amount: template.amount,
             payment: template.payment,
@@ -704,7 +713,7 @@
       render();
     }
 
-    // 가계부 저장
+    // 가계부 저장 로직
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
@@ -736,6 +745,7 @@
         flow_type: selectedFlowType, 
         main_category: mainCat, 
         sub_category: subCat, 
+        category: `${mainCat} > ${subCat}`,
         title, 
         amount, 
         payment, 
@@ -752,12 +762,12 @@
         const { error } = await supabaseClient.from('transactions').insert([newTx]);
         saveBtn.innerText = '저장하기';
         saveBtn.disabled = false;
+        
         if (error) { 
           alert('저장 실패: ' + error.message); 
           return; 
         }
         
-        // 입력한 날짜의 년/월로 상단 뷰 즉시 동기화
         currentYear = dateParts.year;
         currentMonth = dateParts.month;
         updateMonthText();
@@ -786,7 +796,8 @@
     async function deleteTransaction(id) {
       if (!confirm('내역을 삭제하시겠습니까?')) return;
       if (supabaseClient) {
-        await supabaseClient.from('transactions').delete().eq('id', id);
+        const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
+        if (error) alert('삭제 실패: ' + error.message);
         await loadTransactions();
       } else {
         transactions = transactions.filter(t => t.id !== id);
@@ -796,7 +807,7 @@
       if (currentMainView === 'stats') renderStats();
     }
 
-    // 메인 리스트 및 상단 카드 렌더링
+    // 화면 렌더링
     function render() {
       const monthlyData = transactions.filter(t => {
         const p = parseDate(t.date);
