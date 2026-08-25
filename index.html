@@ -6,13 +6,14 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>우리가계부</title>
+  <title>2gether - 둘이 함께 쓰는 가계부</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --primary: #4F46E5;
+      --primary-hover: #4338CA;
       --primary-light: #EEF2FF;
       --income: #10B981;
       --expense: #EF4444;
@@ -26,8 +27,29 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
     
+    /* 인증 및 온보딩 뷰 */
+    .auth-container { max-width: 420px; margin: 60px auto; padding: 24px 20px; background: var(--card); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); text-align: center; }
+    .brand-logo { font-size: 2.2rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 4px; }
+    .brand-sub { font-size: 0.85rem; color: var(--subtext); margin-bottom: 24px; }
+    .auth-input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; text-align: left; }
+    .auth-input { width: 100%; padding: 12px 14px; border: 1px solid #D1D5DB; border-radius: 10px; font-size: 0.95rem; outline: none; }
+    .auth-btn-main { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+    .auth-toggle { margin-top: 14px; font-size: 0.82rem; color: var(--subtext); cursor: pointer; text-decoration: underline; }
+    
+    .onboard-box { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    .card-choice { border: 2px solid #E5E7EB; border-radius: 14px; padding: 16px; cursor: pointer; text-align: left; transition: all 0.2s; }
+    .card-choice:hover, .card-choice.selected { border-color: var(--primary); background: var(--primary-light); }
+    .card-choice h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .card-choice p { font-size: 0.78rem; color: var(--subtext); line-height: 1.4; }
+
+    .code-badge { font-size: 1.6rem; font-weight: 900; letter-spacing: 4px; color: var(--primary); background: var(--primary-light); padding: 12px; border-radius: 12px; margin: 16px 0 8px; user-select: all; }
+
+    /* 메인 앱 스타일 */
+    #appView { display: none; }
     .header { background: var(--card); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 10; }
-    .header h1 { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+    .header-left { display: flex; align-items: baseline; gap: 6px; }
+    .header h1 { font-size: 1.15rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+    .header-code { font-size: 0.7rem; background: var(--primary-light); color: var(--primary); padding: 2px 6px; border-radius: 6px; font-weight: 700; }
     .header-actions { display: flex; align-items: center; gap: 8px; }
     .btn-settings { background: none; border: 1px solid #E5E7EB; border-radius: 8px; padding: 5px 8px; font-size: 0.8rem; cursor: pointer; color: var(--subtext); }
     .month-selector { display: flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.9rem; }
@@ -89,14 +111,12 @@
     .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
     .form-input, select { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
 
-    /* 한국식 커스텀 날짜 선택기 버튼 & 패널 */
     .custom-date-btn { width: 100%; padding: 11px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.92rem; font-weight: 600; text-align: left; background: #FFFFFF; color: var(--text); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .date-panel { display: none; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-top: 6px; }
     .date-panel.open { display: block; }
     .date-picker-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
     .date-quick-btns { display: flex; gap: 6px; }
     .btn-quick { flex: 1; padding: 6px; font-size: 0.75rem; border-radius: 6px; border: 1px solid #D1D5DB; background: white; cursor: pointer; font-weight: 600; color: var(--subtext); }
-    .btn-quick:active { background: var(--primary-light); color: var(--primary); }
 
     .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
     .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; }
@@ -107,13 +127,11 @@
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    /* 드래그 및 삭제 칩 UI */
     .tree-box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
     .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
     .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; min-height: 36px; padding: 4px 0; }
     .chip { display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #D1D5DB; padding: 6px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; user-select: none; touch-action: none; }
     .chip-handle { color: #9CA3AF; cursor: grab; font-size: 0.9rem; }
-    .chip-handle:active { cursor: grabbing; }
     .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.95rem; padding-left: 2px; }
     .btn-del-main { background: none; border: none; color: #EF4444; font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px; }
     .add-row { display: flex; gap: 6px; margin-top: 6px; }
@@ -122,64 +140,108 @@
 </head>
 <body>
 
-  <div class="header">
-    <h1>우리가계부 💑</h1>
-    <div class="header-actions">
-      <div class="month-selector">
-        <button class="month-btn" onclick="changeMonth(-1)">◀</button>
-        <span id="currentMonthText"></span>
-        <button class="month-btn" onclick="changeMonth(1)">▶</button>
+  <!-- 1. 인증/로그인 화면 -->
+  <div class="auth-container" id="viewAuth">
+    <div class="brand-logo">2gether 💑</div>
+    <div class="brand-sub">둘이서 하나로 모으는 스마트 가계부</div>
+
+    <div class="auth-input-group">
+      <input type="email" id="authEmail" class="auth-input" placeholder="이메일 주소" />
+      <input type="password" id="authPassword" class="auth-input" placeholder="비밀번호 (6자 이상)" />
+      <input type="text" id="authNickname" class="auth-input" placeholder="내 별칭 (예: 남편, 아내)" style="display:none;" />
+    </div>
+
+    <button class="auth-btn-main" id="authMainBtn" onclick="handleAuth()">로그인</button>
+    <div class="auth-toggle" id="authToggleBtn" onclick="toggleAuthMode()">처음이신가요? 회원가입하기</div>
+  </div>
+
+  <!-- 2. 부부 매칭 온보딩 화면 -->
+  <div class="auth-container" id="viewOnboarding" style="display:none;">
+    <div class="brand-logo">2gether</div>
+    <div class="brand-sub">가계부 연결 방식을 선택해 주세요</div>
+
+    <div class="onboard-box">
+      <div class="card-choice" onclick="createHousehold()">
+        <h3>✨ 새 가계부 방 만들기</h3>
+        <p>새로운 초대 코드를 생성하고 배우자를 초대합니다.</p>
       </div>
-      <button class="btn-settings" onclick="openSettingsModal()">⚙️ 설정</button>
-    </div>
-  </div>
 
-  <div class="summary-card">
-    <div class="balance-title">이번 달 잔여 (수입 - 총지출)</div>
-    <div class="balance-amount" id="netBalance">0원</div>
-    <div class="grid-stats">
-      <div class="stat-item"><span class="stat-label">총 수입</span><span class="stat-val text-income" id="totalIncome">0원</span></div>
-      <div class="stat-item"><span class="stat-label">변동 소비</span><span class="stat-val text-expense" id="totalExpense">0원</span></div>
-      <div class="stat-item"><span class="stat-label">고정비</span><span class="stat-val text-fixed" id="totalFixed">0원</span></div>
-      <div class="stat-item"><span class="stat-label">저축 / 투자</span><span class="stat-val text-saving" id="totalSaving">0원</span></div>
-    </div>
-  </div>
-
-  <div id="viewLedger">
-    <div class="tabs">
-      <button class="tab active" onclick="switchFilterTab('ALL', event)">전체</button>
-      <button class="tab" onclick="switchFilterTab('지출', event)">지출</button>
-      <button class="tab" onclick="switchFilterTab('수입', event)">수입</button>
-      <button class="tab" onclick="switchFilterTab('저축', event)">저축</button>
-    </div>
-    <div class="list-container" id="transactionList"></div>
-  </div>
-
-  <div id="viewStats">
-    <div class="chart-box">
-      <div style="font-size:0.9rem; font-weight:700; margin-bottom:12px;">📊 당월 지출 비중 (도넛 차트)</div>
-      <div class="chart-container">
-        <canvas id="expenseDoughnutChart"></canvas>
+      <div class="card-choice" onclick="showJoinHouseholdInput()">
+        <h3>🔗 초대 코드로 연결하기</h3>
+        <p>배우자에게 전달받은 6자리 초대 코드를 입력합니다.</p>
       </div>
-      <div id="noChartText" style="display:none; color:#9CA3AF; font-size:0.85rem; padding:30px 0;">지출 내역이 없습니다.</div>
     </div>
-    <div class="stats-breakdown-card">
-      <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--text);">카테고리별 상세 지출</div>
-      <div id="statsBreakdownList"></div>
+
+    <div id="joinInputArea" style="display:none; margin-top:16px;">
+      <input type="text" id="joinInviteCode" class="auth-input" placeholder="초대 코드 6자리 입력" style="text-transform:uppercase; text-align:center; font-weight:700; letter-spacing:2px;" />
+      <button class="auth-btn-main" style="margin-top:8px;" onclick="joinHousehold()">연결 완료하기</button>
     </div>
   </div>
 
-  <button class="fab" onclick="openModal()">+</button>
+  <!-- 3. 메인 가계부 앱 화면 -->
+  <div id="appView">
+    <div class="header">
+      <div class="header-left">
+        <h1>2gether</h1>
+        <span class="header-code" id="displayInviteCode" onclick="copyInviteCode()" title="클릭하여 코드 복사">코드 복사</span>
+      </div>
+      <div class="header-actions">
+        <div class="month-selector">
+          <button class="month-btn" onclick="changeMonth(-1)">◀</button>
+          <span id="currentMonthText"></span>
+          <button class="month-btn" onclick="changeMonth(1)">▶</button>
+        </div>
+        <button class="btn-settings" onclick="openSettingsModal()">⚙️ 설정</button>
+      </div>
+    </div>
 
-  <div class="bottom-nav">
-    <button class="nav-btn active" id="navLedgerBtn" onclick="switchMainView('ledger')">
-      <span class="nav-icon">📝</span>
-      <span>내역</span>
-    </button>
-    <button class="nav-btn" id="navStatsBtn" onclick="switchMainView('stats')">
-      <span class="nav-icon">📊</span>
-      <span>통계</span>
-    </button>
+    <div class="summary-card">
+      <div class="balance-title">이번 달 잔여 (수입 - 총지출)</div>
+      <div class="balance-amount" id="netBalance">0원</div>
+      <div class="grid-stats">
+        <div class="stat-item"><span class="stat-label">총 수입</span><span class="stat-val text-income" id="totalIncome">0원</span></div>
+        <div class="stat-item"><span class="stat-label">변동 소비</span><span class="stat-val text-expense" id="totalExpense">0원</span></div>
+        <div class="stat-item"><span class="stat-label">고정비</span><span class="stat-val text-fixed" id="totalFixed">0원</span></div>
+        <div class="stat-item"><span class="stat-label">저축 / 투자</span><span class="stat-val text-saving" id="totalSaving">0원</span></div>
+      </div>
+    </div>
+
+    <div id="viewLedger">
+      <div class="tabs">
+        <button class="tab active" onclick="switchFilterTab('ALL', event)">전체</button>
+        <button class="tab" onclick="switchFilterTab('지출', event)">지출</button>
+        <button class="tab" onclick="switchFilterTab('수입', event)">수입</button>
+        <button class="tab" onclick="switchFilterTab('저축', event)">저축</button>
+      </div>
+      <div class="list-container" id="transactionList"></div>
+    </div>
+
+    <div id="viewStats">
+      <div class="chart-box">
+        <div style="font-size:0.9rem; font-weight:700; margin-bottom:12px;">📊 당월 지출 비중 (도넛 차트)</div>
+        <div class="chart-container">
+          <canvas id="expenseDoughnutChart"></canvas>
+        </div>
+        <div id="noChartText" style="display:none; color:#9CA3AF; font-size:0.85rem; padding:30px 0;">지출 내역이 없습니다.</div>
+      </div>
+      <div class="stats-breakdown-card">
+        <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--text);">카테고리별 상세 지출</div>
+        <div id="statsBreakdownList"></div>
+      </div>
+    </div>
+
+    <button class="fab" onclick="openModal()">+</button>
+
+    <div class="bottom-nav">
+      <button class="nav-btn active" id="navLedgerBtn" onclick="switchMainView('ledger')">
+        <span class="nav-icon">📝</span>
+        <span>내역</span>
+      </button>
+      <button class="nav-btn" id="navStatsBtn" onclick="switchMainView('stats')">
+        <span class="nav-icon">📊</span>
+        <span>통계</span>
+      </button>
+    </div>
   </div>
 
   <!-- 가계부 등록 모달 -->
@@ -198,7 +260,6 @@
         <select id="txAuthor" class="form-input"></select>
       </div>
 
-      <!-- 한국식 맞춤 날짜 선택기 -->
       <div class="form-group">
         <label class="form-label">날짜</label>
         <button type="button" class="custom-date-btn" onclick="toggleDatePanel()">
@@ -263,8 +324,13 @@
   <!-- 설정 모달 -->
   <div class="modal" id="settingsModal">
     <div class="modal-content">
-      <div class="modal-title">⚙️ 분류 및 결제수단 설정</div>
-      <div style="font-size:0.75rem; color:var(--subtext); margin-bottom:12px;">💡 항목의 <b>⠿</b> 아이콘을 끌어서 순서를 변경하고, <b>×</b>를 눌러 삭제할 수 있습니다.</div>
+      <div class="modal-title">⚙️ 2gether 설정</div>
+      
+      <div class="tree-box">
+        <div class="tree-header">💑 커플 연결 정보</div>
+        <div style="font-size:0.8rem; color:var(--subtext); margin-bottom:8px;">초대 코드: <b id="settingsInviteCodeText" style="color:var(--primary);"></b></div>
+        <button class="btn-quick" style="width:100%; padding:8px;" onclick="copyInviteCode()">초대 코드 복사하여 배우자에게 공유</button>
+      </div>
 
       <div class="tree-box">
         <div class="tree-header">➕ 새 대분류 추가</div>
@@ -300,17 +366,22 @@
       </div>
       <div class="chip-container" id="paymentChips" style="margin-top:8px;"></div>
 
-      <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:20px;">설정 완료</button>
+      <button class="btn-close" style="margin-top:16px; background:#FEE2E2; color:#DC2626;" onclick="handleLogout()">로그아웃</button>
+      <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:6px;">설정 완료</button>
     </div>
   </div>
 
   <script>
-    const APP_VERSION = '11.0';
+    const APP_VERSION = '12.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let currentHousehold = null;
+    let isSignUpMode = false;
 
     let transactions = [];
     let doughnutChartInstance = null;
@@ -335,25 +406,22 @@
     let categoryStructure = defaultCategories;
     try {
       const storedCat = JSON.parse(localStorage.getItem('my_category_tree'));
-      if (storedCat && storedCat['지출'] && typeof storedCat['지출'] === 'object' && !Array.isArray(storedCat['지출'])) {
+      if (storedCat && storedCat['지출'] && typeof storedCat['지출'] === 'object') {
         categoryStructure = storedCat;
-      } else {
-        localStorage.setItem('my_category_tree', JSON.stringify(defaultCategories));
       }
     } catch(e) {
       categoryStructure = defaultCategories;
     }
 
     let payments = JSON.parse(localStorage.getItem('my_ledger_payments')) || [
-      'J 삼성카드', 'J 국민카드', 'D 신한카드', '신한은행(J)', '신한은행(D)', '우리은행(J)', '토스뱅크', '현금/이체'
+      '삼성카드', '국민카드', '신한카드', '신한은행', '우리은행', '토스뱅크', '현금/이체'
     ];
-    let authors = ['남편(J)', '아내(D)', '공동'];
+    let authors = ['남편', '아내', '공동'];
 
     const today = new Date();
     let currentYear = today.getFullYear();
     let currentMonth = today.getMonth() + 1;
     
-    // 현재 입력 선택 날짜 상태
     let selectedTxDate = {
       year: today.getFullYear(),
       month: today.getMonth() + 1,
@@ -371,7 +439,134 @@
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
-    async function init() {
+    // --- 인증 & 온보딩 플로우 ---
+    async function checkSession() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        showView('auth');
+        return;
+      }
+      currentUser = session.user;
+      
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('*, households(*)')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (!profile || !profile.household_id) {
+        showView('onboarding');
+      } else {
+        currentHousehold = profile.households;
+        document.getElementById('displayInviteCode').innerText = `코드: ${currentHousehold.invite_code}`;
+        document.getElementById('settingsInviteCodeText').innerText = currentHousehold.invite_code;
+        showView('app');
+        await initApp();
+      }
+    }
+
+    function showView(view) {
+      document.getElementById('viewAuth').style.display = view === 'auth' ? 'block' : 'none';
+      document.getElementById('viewOnboarding').style.display = view === 'onboarding' ? 'block' : 'none';
+      document.getElementById('appView').style.display = view === 'app' ? 'block' : 'none';
+    }
+
+    function toggleAuthMode() {
+      isSignUpMode = !isSignUpMode;
+      document.getElementById('authNickname').style.display = isSignUpMode ? 'block' : 'none';
+      document.getElementById('authMainBtn').innerText = isSignUpMode ? '회원가입' : '로그인';
+      document.getElementById('authToggleBtn').innerText = isSignUpMode ? '이미 계정이 있으신가요? 로그인' : '처음이신가요? 회원가입하기';
+    }
+
+    async function handleAuth() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      const nickname = document.getElementById('authNickname').value.trim();
+
+      if (!email || !password) return alert('이메일과 비밀번호를 입력해주세요.');
+
+      if (isSignUpMode) {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) return alert('회원가입 실패: ' + error.message);
+        
+        if (data.user) {
+          await supabaseClient.from('profiles').insert([{ id: data.user.id, email, nickname: nickname || '사용자' }]);
+          alert('가입이 완료되었습니다!');
+          await checkSession();
+        }
+      } else {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) return alert('로그인 실패: ' + error.message);
+        await checkSession();
+      }
+    }
+
+    async function handleLogout() {
+      if (!confirm('로그아웃 하시겠습니까?')) return;
+      await supabaseClient.auth.signOut();
+      location.reload();
+    }
+
+    function generateInviteCode() {
+      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+      let res = '2G-';
+      for (let i = 0; i < 4; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+      return res;
+    }
+
+    async function createHousehold() {
+      const code = generateInviteCode();
+      const { data: household, error } = await supabaseClient
+        .from('households')
+        .insert([{ invite_code: code }])
+        .select()
+        .single();
+
+      if (error) return alert('방 생성 실패: ' + error.message);
+
+      await supabaseClient
+        .from('profiles')
+        .update({ household_id: household.id })
+        .eq('id', currentUser.id);
+
+      alert(`가계부 방이 생성되었습니다!\n초대 코드: ${code}\n배우자에게 전달하세요.`);
+      await checkSession();
+    }
+
+    function showJoinHouseholdInput() {
+      document.getElementById('joinInputArea').style.display = 'block';
+    }
+
+    async function joinHousehold() {
+      const code = document.getElementById('joinInviteCode').value.trim().toUpperCase();
+      if (!code) return alert('초대 코드를 입력해주세요.');
+
+      const { data: household, error } = await supabaseClient
+        .from('households')
+        .select('*')
+        .eq('invite_code', code)
+        .single();
+
+      if (error || !household) return alert('존재하지 않는 초대 코드입니다.');
+
+      await supabaseClient
+        .from('profiles')
+        .update({ household_id: household.id })
+        .eq('id', currentUser.id);
+
+      alert('2gether 가계부 매칭이 완료되었습니다!');
+      await checkSession();
+    }
+
+    function copyInviteCode() {
+      if (!currentHousehold) return;
+      navigator.clipboard.writeText(currentHousehold.invite_code).then(() => {
+        alert(`초대 코드 [${currentHousehold.invite_code}]가 복사되었습니다. 배우자에게 전달하세요!`);
+      });
+    }
+
+    // --- 메인 가계부 로직 ---
+    async function initApp() {
       updateMonthText();
       initDateWheel();
       renderDropdowns();
@@ -383,7 +578,6 @@
       document.getElementById('currentMonthText').innerText = `${currentYear}년 ${currentMonth}월`;
     }
 
-    // --- 한국식 날짜 선택기 로직 ---
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
     function initDateWheel() {
@@ -430,8 +624,7 @@
     }
 
     function toggleDatePanel() {
-      const panel = document.getElementById('datePanel');
-      panel.classList.toggle('open');
+      document.getElementById('datePanel').classList.toggle('open');
     }
 
     function setQuickDate(offsetDays) {
@@ -452,9 +645,7 @@
       if (!dateVal) return '';
       const clean = String(dateVal).split('T')[0];
       const parts = clean.split('-');
-      if (parts.length >= 3) {
-        return `${Number(parts[1])}월 ${Number(parts[2])}일`;
-      }
+      if (parts.length >= 3) return `${Number(parts[1])}월 ${Number(parts[2])}일`;
       return dateVal;
     }
 
@@ -538,7 +729,6 @@
       document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
     }
 
-    // --- 설정 모달 & 드래그 앤 드롭 & 삭제 UI ---
     function renderSettings() {
       const targetMainSelect = document.getElementById('targetMainCatSelect');
       let options = [];
@@ -678,15 +868,15 @@
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
-    // --- DB 연동 및 렌더링 ---
     async function loadTransactions() {
-      if (isFetching) return;
+      if (isFetching || !currentHousehold) return;
       isFetching = true;
 
       try {
         const { data, error } = await supabaseClient
           .from('transactions')
           .select('*')
+          .eq('household_id', currentHousehold.id)
           .order('date', { ascending: false });
         
         if (!error && Array.isArray(data)) {
@@ -708,15 +898,22 @@
     }
 
     function listenRealtime() {
+      if (!currentHousehold) return;
       supabaseClient
-        .channel('public:transactions')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        .channel(`public:transactions:${currentHousehold.id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'transactions',
+          filter: `household_id=eq.${currentHousehold.id}`
+        }, () => {
           loadTransactions();
         })
         .subscribe();
     }
 
     async function autoApplyRecurringExpenses() {
+      if (!currentHousehold) return;
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const recurringTemplates = transactions.filter(t => t.is_recurring === true);
       const currentMonthData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
@@ -727,6 +924,7 @@
         if (!exists) {
           const originalDay = String(template.date).split('-')[2] || '01';
           newEntries.push({
+            household_id: currentHousehold.id,
             date: `${targetPrefix}-${originalDay.slice(0,2)}`,
             flow_type: template.flow_type || template.type,
             type: template.flow_type || template.type,
@@ -745,7 +943,11 @@
 
       if (newEntries.length > 0) {
         await supabaseClient.from('transactions').insert(newEntries);
-        const { data } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
+        const { data } = await supabaseClient
+          .from('transactions')
+          .select('*')
+          .eq('household_id', currentHousehold.id)
+          .order('date', { ascending: false });
         if (data) transactions = data;
       }
     }
@@ -767,6 +969,7 @@
     }
 
     async function saveTransaction() {
+      if (!currentHousehold) return alert('가계부 방 정보가 없습니다.');
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
       const date = getSelectedDateString();
@@ -792,6 +995,7 @@
       localStorage.setItem('my_ledger_author', author);
 
       const newTx = { 
+        household_id: currentHousehold.id,
         date: date,
         type: selectedFlowType, 
         flow_type: selectedFlowType, 
@@ -1002,7 +1206,7 @@
       }).join('');
     }
 
-    init();
+    checkSession();
   </script>
 </body>
 </html>
