@@ -7,8 +7,9 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>우리가계부</title>
-  <!-- Chart.js 및 Supabase 로드 -->
+  <!-- Chart.js, SortableJS, Supabase 로드 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -25,7 +26,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
     
-    /* 상단 헤더 */
     .header { background: var(--card); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 10; }
     .header h1 { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
     .header-actions { display: flex; align-items: center; gap: 8px; }
@@ -33,7 +33,6 @@
     .month-selector { display: flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.9rem; }
     .month-btn { background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
 
-    /* 요약 카드 */
     .summary-card { background: var(--card); margin: 14px 16px; padding: 16px; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .balance-title { font-size: 0.75rem; color: var(--subtext); margin-bottom: 2px; }
     .balance-amount { font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; }
@@ -46,12 +45,10 @@
     .text-fixed { color: var(--fixed); }
     .text-saving { color: var(--saving); }
 
-    /* 필터 탭 */
     .tabs { display: flex; background: var(--card); margin: 0 16px 12px; border-radius: 12px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 0.78rem; font-weight: 600; color: var(--subtext); border: none; background: none; cursor: pointer; border-radius: 8px; }
     .tab.active { background: var(--primary); color: white; }
 
-    /* 내역 리스트 */
     .list-container { margin: 0 16px; }
     .item-card { background: var(--card); padding: 12px 14px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
     .item-left { display: flex; flex-direction: column; gap: 3px; max-width: 68%; }
@@ -64,7 +61,6 @@
     .item-amount { font-weight: 700; font-size: 0.92rem; }
     .item-delete { background: none; border: none; color: #9CA3AF; font-size: 0.72rem; margin-top: 4px; cursor: pointer; }
 
-    /* 통계 화면 전용 스타일 */
     #viewStats { display: none; margin: 0 16px; }
     .chart-box { background: var(--card); border-radius: 16px; padding: 20px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 14px; text-align: center; }
     .chart-container { position: relative; width: 220px; height: 220px; margin: 0 auto 12px; }
@@ -78,7 +74,6 @@
     .stats-amount { font-size: 0.88rem; font-weight: 700; }
     .stats-pct { font-size: 0.72rem; color: var(--subtext); }
 
-    /* 하단 고정 네비게이션 탭바 */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--card); display: flex; border-top: 1px solid #E5E7EB; z-index: 50; }
     .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; font-size: 0.72rem; font-weight: 600; color: var(--subtext); cursor: pointer; }
     .nav-btn.active { color: var(--primary); font-weight: 700; }
@@ -86,7 +81,6 @@
 
     .fab { position: fixed; bottom: 74px; right: 20px; width: 54px; height: 54px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 40; }
 
-    /* 모달 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; }
     .modal.open { display: flex; }
     .modal-content { background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 20px 18px 30px; max-height: 90vh; overflow-y: auto; }
@@ -103,11 +97,14 @@
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
+    /* 드래그 앤 드롭 칩 스타일 */
     .tree-box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
     .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-    .chip { display: flex; align-items: center; gap: 4px; background: #FFFFFF; border: 1px solid #D1D5DB; padding: 4px 8px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; }
-    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; min-height: 32px; }
+    .chip { display: flex; align-items: center; gap: 4px; background: #FFFFFF; border: 1px solid #D1D5DB; padding: 5px 9px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; cursor: grab; user-select: none; touch-action: none; }
+    .chip:active { cursor: grabbing; opacity: 0.8; }
+    .chip-handle { color: #9CA3AF; margin-right: 2px; font-size: 0.8rem; }
+    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.85rem; padding-left: 2px; }
     .add-row { display: flex; gap: 6px; margin-top: 6px; }
     .btn-add { background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
   </style>
@@ -127,7 +124,7 @@
     </div>
   </div>
 
-  <!-- 상단 요약 카드 (공통) -->
+  <!-- 상단 요약 카드 -->
   <div class="summary-card">
     <div class="balance-title">이번 달 잔여 (수입 - 총지출)</div>
     <div class="balance-amount" id="netBalance">0원</div>
@@ -139,7 +136,7 @@
     </div>
   </div>
 
-  <!-- [화면 1] 내역 목록 뷰 -->
+  <!-- 내역 뷰 -->
   <div id="viewLedger">
     <div class="tabs">
       <button class="tab active" onclick="switchFilterTab('ALL', event)">전체</button>
@@ -150,7 +147,7 @@
     <div class="list-container" id="transactionList"></div>
   </div>
 
-  <!-- [화면 2] 통계 차트 뷰 -->
+  <!-- 통계 뷰 -->
   <div id="viewStats">
     <div class="chart-box">
       <div style="font-size:0.9rem; font-weight:700; margin-bottom:12px;">📊 당월 지출 비중 (도넛 차트)</div>
@@ -159,15 +156,13 @@
       </div>
       <div id="noChartText" style="display:none; color:#9CA3AF; font-size:0.85rem; padding:30px 0;">지출 내역이 없습니다.</div>
     </div>
-
-    <!-- 항목별 세부 퍼센트 / 금액 분석 -->
     <div class="stats-breakdown-card">
       <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--text);">카테고리별 상세 지출</div>
       <div id="statsBreakdownList"></div>
     </div>
   </div>
 
-  <!-- 등록 FAB 버튼 -->
+  <!-- 등록 FAB -->
   <button class="fab" onclick="openModal()">+</button>
 
   <!-- 하단 탭 바 -->
@@ -188,9 +183,9 @@
       <div class="modal-title">가계부 등록</div>
       
       <div class="type-selector">
-        <button type="button" class="type-btn selected" onclick="selectFlowType('지출', event)">지출</button>
-        <button type="button" class="type-btn" onclick="selectFlowType('수입', event)">수입</button>
-        <button type="button" class="type-btn" onclick="selectFlowType('저축', event)">저축</button>
+        <button type="button" class="type-btn" id="flowBtn-지출" onclick="selectFlowType('지출', event)">지출</button>
+        <button type="button" class="type-btn" id="flowBtn-수입" onclick="selectFlowType('수입', event)">수입</button>
+        <button type="button" class="type-btn" id="flowBtn-저축" onclick="selectFlowType('저축', event)">저축</button>
       </div>
 
       <div class="form-group">
@@ -248,6 +243,7 @@
   <div class="modal" id="settingsModal">
     <div class="modal-content">
       <div class="modal-title">⚙️ 분류 및 결제수단 설정</div>
+      <div style="font-size:0.75rem; color:var(--subtext); margin-bottom:12px;">💡 칩을 길게 눌러 끌어당기면 순서를 변경할 수 있습니다.</div>
 
       <div class="tree-box">
         <div class="tree-header">➕ 새 대분류 추가</div>
@@ -271,12 +267,12 @@
         </div>
       </div>
 
-      <div class="form-label" style="margin-top:14px;">현재 등록된 분류 목록</div>
+      <div class="form-label" style="margin-top:14px;">현재 등록된 분류 목록 (드래그하여 정렬)</div>
       <div id="categoryTreeDisplay"></div>
 
       <hr style="border:none; border-top:1px solid #E5E7EB; margin:16px 0;" />
 
-      <div class="form-label">결제수단 / 계좌 관리</div>
+      <div class="form-label">결제수단 / 계좌 관리 (드래그하여 정렬)</div>
       <div class="add-row">
         <input type="text" id="newPaymentInput" class="form-input" placeholder="새 결제수단 (예: 토스뱅크)" />
         <button class="btn-add" onclick="addPayment()">추가</button>
@@ -288,11 +284,11 @@
   </div>
 
   <script>
-    const APP_VERSION = '2.5';
+    const APP_VERSION = '3.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
-
+    
     let supabaseClient = (SUPABASE_URL !== '여기에_SUPABASE_URL_입력') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
     let transactions = [];
     let doughnutChartInstance = null;
@@ -328,7 +324,16 @@
     const today = new Date();
     let currentYear = today.getFullYear();
     let currentMonth = today.getMonth() + 1;
-    let selectedFlowType = '지출';
+    
+    // 마지막 입력 상태 복원 (스마트 기본값)
+    let lastUsedState = JSON.parse(localStorage.getItem('my_last_used_state')) || {
+      flow: '지출',
+      main: '소비',
+      sub: '식비',
+      payment: payments[0] || ''
+    };
+
+    let selectedFlowType = lastUsedState.flow || '지출';
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
@@ -345,10 +350,19 @@
     }
 
     function updateMonthText() {
-      document.getElementById('currentMonthText').innerText = `${currentYear}.${String(currentMonth).padStart(2, '0')}`;
+      document.getElementById('currentMonthText').innerText = `${currentYear}년 ${currentMonth}월`;
     }
 
-    // 메인 화면 전환 ([내역] vs [통계])
+    // 한국식 날짜 포맷터 (YYYY-MM-DD -> M월 D일)
+    function formatKoreanDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${Number(parts[1])}월 ${Number(parts[2])}일`;
+      }
+      return dateStr;
+    }
+
     function switchMainView(view) {
       currentMainView = view;
       if (view === 'ledger') {
@@ -373,7 +387,17 @@
 
       const paySelect = document.getElementById('txPayment');
       paySelect.innerHTML = payments.map(p => `<option value="${p}">${p}</option>`).join('');
+      if (lastUsedState.payment && payments.includes(lastUsedState.payment)) {
+        paySelect.value = lastUsedState.payment;
+      }
 
+      applyLastUsedFlowType();
+    }
+
+    function applyLastUsedFlowType() {
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+      const activeBtn = document.getElementById(`flowBtn-${selectedFlowType}`);
+      if (activeBtn) activeBtn.classList.add('selected');
       renderMainCategories();
     }
 
@@ -381,6 +405,10 @@
       const mainSelect = document.getElementById('txMainCategory');
       const mains = Object.keys(categoryStructure[selectedFlowType] || {});
       mainSelect.innerHTML = mains.map(m => `<option value="${m}">${m}</option>`).join('');
+      
+      if (lastUsedState.main && mains.includes(lastUsedState.main) && lastUsedState.flow === selectedFlowType) {
+        mainSelect.value = lastUsedState.main;
+      }
       handleMainCategoryChange();
     }
 
@@ -389,18 +417,23 @@
       const subSelect = document.getElementById('txSubCategory');
       const subs = (categoryStructure[selectedFlowType] && categoryStructure[selectedFlowType][mainCat]) || [];
       subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+
+      if (lastUsedState.sub && subs.includes(lastUsedState.sub) && lastUsedState.main === mainCat) {
+        subSelect.value = lastUsedState.sub;
+      }
     }
 
     function selectFlowType(type, e) {
       selectedFlowType = type;
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-      e.target.classList.add('selected');
+      if (e && e.target) e.target.classList.add('selected');
       renderMainCategories();
       
       const mainCat = document.getElementById('txMainCategory').value;
       document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
     }
 
+    // 설정 화면 및 SortableJS 드래그 앤 드롭 활성화
     function renderSettings() {
       const targetMainSelect = document.getElementById('targetMainCatSelect');
       let options = [];
@@ -418,9 +451,9 @@
           treeHtml += `<div style="margin: 6px 0 2px; font-size:0.8rem; font-weight:700; display:flex; justify-content:space-between;">
             <span>↳ ${main}</span>
             <button class="chip-remove" onclick="removeMainCategory('${flow}', '${main}')">대분류 삭제</button>
-          </div><div class="chip-container">`;
+          </div><div class="chip-container sub-chip-container" data-flow="${flow}" data-main="${main}">`;
           categoryStructure[flow][main].forEach(sub => {
-            treeHtml += `<div class="chip"><span>${sub}</span><button class="chip-remove" onclick="removeSubCategory('${flow}', '${main}', '${sub}')">×</button></div>`;
+            treeHtml += `<div class="chip" data-id="${sub}"><span class="chip-handle">⠿</span><span>${sub}</span><button class="chip-remove" onclick="removeSubCategory('${flow}', '${main}', '${sub}')">×</button></div>`;
           });
           treeHtml += `</div>`;
         });
@@ -428,9 +461,45 @@
       });
       document.getElementById('categoryTreeDisplay').innerHTML = treeHtml;
 
-      document.getElementById('paymentChips').innerHTML = payments.map((p, i) => `
-        <div class="chip"><span>${p}</span><button class="chip-remove" onclick="removePayment(${i})">×</button></div>
+      const payContainer = document.getElementById('paymentChips');
+      payContainer.innerHTML = payments.map((p, i) => `
+        <div class="chip" data-id="${p}"><span class="chip-handle">⠿</span><span>${p}</span><button class="chip-remove" onclick="removePayment(${i})">×</button></div>
       `).join('');
+
+      initDragAndDrop();
+    }
+
+    function initDragAndDrop() {
+      // 결제수단 드래그 앤 드롭
+      const payContainer = document.getElementById('paymentChips');
+      if (payContainer) {
+        new Sortable(payContainer, {
+          animation: 150,
+          handle: '.chip-handle',
+          onEnd: function () {
+            const newOrder = Array.from(payContainer.children).map(child => child.getAttribute('data-id'));
+            payments = newOrder;
+            localStorage.setItem('my_ledger_payments', JSON.stringify(payments));
+            renderDropdowns();
+          }
+        });
+      }
+
+      // 중분류 카테고리 드래그 앤 드롭
+      document.querySelectorAll('.sub-chip-container').forEach(container => {
+        new Sortable(container, {
+          animation: 150,
+          handle: '.chip-handle',
+          onEnd: function () {
+            const flow = container.getAttribute('data-flow');
+            const main = container.getAttribute('data-main');
+            const newOrder = Array.from(container.children).map(child => child.getAttribute('data-id'));
+            categoryStructure[flow][main] = newOrder;
+            localStorage.setItem('my_category_tree', JSON.stringify(categoryStructure));
+            renderDropdowns();
+          }
+        });
+      });
     }
 
     function addMainCategory() {
@@ -497,7 +566,10 @@
 
     function openSettingsModal() { renderSettings(); document.getElementById('settingsModal').classList.add('open'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
-    function openModal() { document.getElementById('inputModal').classList.add('open'); }
+    function openModal() { 
+      applyLastUsedFlowType();
+      document.getElementById('inputModal').classList.add('open'); 
+    }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
     async function loadTransactions() {
@@ -581,7 +653,16 @@
         return;
       }
 
+      // 마지막 입력 상태 저장
+      lastUsedState = {
+        flow: selectedFlowType,
+        main: mainCat,
+        sub: subCat,
+        payment: payment
+      };
+      localStorage.setItem('my_last_used_state', JSON.stringify(lastUsedState));
       localStorage.setItem('my_ledger_author', author);
+
       const newTx = { 
         date, 
         flow_type: selectedFlowType, 
@@ -631,7 +712,6 @@
       if (currentMainView === 'stats') renderStats();
     }
 
-    // 메인 리스트 및 요약카드 렌더링
     function render() {
       const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const monthlyData = transactions.filter(t => t.date && t.date.startsWith(prefix));
@@ -679,13 +759,14 @@
         const flow = t.flow_type || t.type;
         const isInc = (flow === '수입' || flow === 'INCOME');
         const catLabel = t.main_category ? `${t.main_category} > ${t.sub_category}` : (t.category || '기타');
+        const dateDisplay = formatKoreanDate(t.date);
 
         return `
           <div class="item-card">
             <div class="item-left">
               <div class="item-title">${t.title}</div>
               <div class="item-meta">
-                <span>${t.date.slice(5)}</span>
+                <span>${dateDisplay}</span>
                 <span class="tag">${catLabel}</span>
                 ${t.is_recurring ? `<span class="tag-repeat">반복</span>` : ''}
                 <span class="tag-author">${t.author || '공동'}</span>
@@ -704,7 +785,6 @@
       }).join('');
     }
 
-    // 📊 통계 차트 및 비중 렌더링 함수
     const chartPalette = [
       '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
       '#FF9F40', '#E7E9ED', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'
@@ -747,7 +827,6 @@
       canvas.style.display = 'block';
       noChartText.style.display = 'none';
 
-      // Chart.js 인스턴스 갱신
       if (doughnutChartInstance) doughnutChartInstance.destroy();
 
       doughnutChartInstance = new Chart(canvas, {
@@ -771,7 +850,6 @@
         }
       });
 
-      // 상세 비중 리스트 출력 (높은 금액순)
       const sortedEntries = Object.entries(catSums).sort((a, b) => b[1] - a[1]);
       breakdownList.innerHTML = sortedEntries.map(([cat, amt], idx) => {
         const color = chartPalette[idx % chartPalette.length];
