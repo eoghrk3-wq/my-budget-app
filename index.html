@@ -4,16 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>우리가계부</title>
-
-  <!-- PWA 설정 -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#4F46E5" />
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="우리가계부" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -27,11 +17,10 @@
       --text: #1F2937;
       --subtext: #6B7280;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overscroll-behavior-y: contain; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
-
-    .header { background: var(--card); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 10; padding-top: max(14px, env(safe-area-inset-top)); }
+    
+    .header { background: var(--card); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 10; }
     .header h1 { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
     .header-actions { display: flex; align-items: center; gap: 8px; }
     .btn-settings { background: none; border: 1px solid #E5E7EB; border-radius: 8px; padding: 5px 8px; font-size: 0.8rem; cursor: pointer; color: var(--subtext); }
@@ -66,11 +55,11 @@
     .item-amount { font-weight: 700; font-size: 0.92rem; }
     .item-delete { background: none; border: none; color: #9CA3AF; font-size: 0.72rem; margin-top: 4px; cursor: pointer; }
 
-    .fab { position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4); cursor: pointer; }
+    .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4); cursor: pointer; }
 
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; }
     .modal.open { display: flex; }
-    .modal-content { background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 20px 18px calc(30px + env(safe-area-inset-bottom)); max-height: 90vh; overflow-y: auto; }
+    .modal-content { background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 20px 18px 30px; max-height: 90vh; overflow-y: auto; }
     .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
     .form-group { margin-bottom: 12px; }
     .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
@@ -78,23 +67,24 @@
     .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
     .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; }
     .btn-close { width: 100%; background: #F3F4F6; color: var(--subtext); border: none; padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
-    .type-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-    .type-btn { padding: 8px 0; border: 1px solid #D1D5DB; border-radius: 8px; background: white; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-align: center; }
+    
+    .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .type-btn { padding: 8px 0; border: 1px solid #D1D5DB; border-radius: 8px; background: white; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-align: center; }
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
 
-    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .chip { display: flex; align-items: center; gap: 6px; background: #F3F4F6; padding: 6px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
-    .add-row { display: flex; gap: 6px; margin-top: 6px; }
-    .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    .install-banner { display: none; background: #EEF2FF; color: var(--primary); font-size: 0.78rem; font-weight: 600; text-align: center; padding: 8px; }
-    .install-banner.show { display: block; }
+    /* 설정 모달 */
+    .tree-box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+    .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .chip { display: flex; align-items: center; gap: 4px; background: #FFFFFF; border: 1px solid #D1D5DB; padding: 4px 8px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; }
+    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+    .add-row { display: flex; gap: 6px; margin-top: 6px; }
+    .btn-add { background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
   </style>
 </head>
 <body>
-
-  <div class="install-banner" id="installBanner">📲 우측 상단 브라우저 메뉴에서 '홈 화면에 추가'를 누르면 앱처럼 쓸 수 있어요</div>
 
   <div class="header">
     <h1>우리가계부 💑</h1>
@@ -104,27 +94,26 @@
         <span id="currentMonthText"></span>
         <button class="month-btn" onclick="changeMonth(1)">▶</button>
       </div>
-      <button class="btn-settings" onclick="openSettingsModal()">⚙️ 설정</button>
+      <button class="btn-settings" onclick="openSettingsModal()">⚙️ 분류설정</button>
     </div>
   </div>
 
   <div class="summary-card">
-    <div class="balance-title">이번 달 남은 금액 (수입 - 총지출)</div>
+    <div class="balance-title">이번 달 잔여 (수입 - 총지출)</div>
     <div class="balance-amount" id="netBalance">0원</div>
     <div class="grid-stats">
       <div class="stat-item"><span class="stat-label">총 수입</span><span class="stat-val text-income" id="totalIncome">0원</span></div>
       <div class="stat-item"><span class="stat-label">변동 소비</span><span class="stat-val text-expense" id="totalExpense">0원</span></div>
       <div class="stat-item"><span class="stat-label">고정비</span><span class="stat-val text-fixed" id="totalFixed">0원</span></div>
-      <div class="stat-item"><span class="stat-label">적금/저축</span><span class="stat-val text-saving" id="totalSaving">0원</span></div>
+      <div class="stat-item"><span class="stat-label">저축 / 투자</span><span class="stat-val text-saving" id="totalSaving">0원</span></div>
     </div>
   </div>
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('ALL', event)">전체</button>
-    <button class="tab" onclick="switchTab('EXPENSE', event)">소비</button>
-    <button class="tab" onclick="switchTab('FIXED', event)">고정비</button>
-    <button class="tab" onclick="switchTab('INCOME', event)">수입</button>
-    <button class="tab" onclick="switchTab('SAVING', event)">저축</button>
+    <button class="tab" onclick="switchTab('지출', event)">지출</button>
+    <button class="tab" onclick="switchTab('수입', event)">수입</button>
+    <button class="tab" onclick="switchTab('저축', event)">저축</button>
   </div>
 
   <div class="list-container" id="transactionList"></div>
@@ -134,12 +123,12 @@
   <div class="modal" id="inputModal">
     <div class="modal-content">
       <div class="modal-title">가계부 등록</div>
-
+      
+      <!-- 1단계: 대유형 선택 -->
       <div class="type-selector">
-        <button type="button" class="type-btn selected" onclick="selectType('EXPENSE', event)">소비</button>
-        <button type="button" class="type-btn" onclick="selectType('FIXED', event)">고정비</button>
-        <button type="button" class="type-btn" onclick="selectType('INCOME', event)">수입</button>
-        <button type="button" class="type-btn" onclick="selectType('SAVING', event)">저축</button>
+        <button type="button" class="type-btn selected" onclick="selectFlowType('지출', event)">지출</button>
+        <button type="button" class="type-btn" onclick="selectFlowType('수입', event)">수입</button>
+        <button type="button" class="type-btn" onclick="selectFlowType('저축', event)">저축</button>
       </div>
 
       <div class="form-group">
@@ -152,19 +141,26 @@
         <input type="date" id="txDate" class="form-input" />
       </div>
 
+      <!-- 2 & 3단계: 대분류 & 중분류 동적 연동 -->
+      <div class="category-grid">
+        <div class="form-group">
+          <label class="form-label">대분류</label>
+          <select id="txMainCategory" class="form-input" onchange="handleMainCategoryChange()"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">중분류</label>
+          <select id="txSubCategory" class="form-input"></select>
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">내용 / 지출처</label>
-        <input type="text" id="txTitle" class="form-input" placeholder="예: 한화생명 보험료, 이마트 등" />
+        <input type="text" id="txTitle" class="form-input" placeholder="예: 롯데백화점 루솔, 관리비 등" />
       </div>
 
       <div class="form-group">
         <label class="form-label">금액 (원)</label>
-        <input type="text" id="txAmount" class="form-input" placeholder="0" inputmode="numeric" oninput="formatAmountInput(this)" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">카테고리</label>
-        <select id="txCategory" class="form-input"></select>
+        <input type="number" id="txAmount" class="form-input" placeholder="0" inputmode="numeric" />
       </div>
 
       <div class="form-group">
@@ -172,14 +168,14 @@
         <select id="txPayment" class="form-input"></select>
       </div>
 
-      <div class="checkbox-group" id="repeatGroup">
+      <div class="checkbox-group">
         <input type="checkbox" id="txIsRecurring" style="width:18px; height:18px;" />
         <label for="txIsRecurring">매월 같은 날짜에 자동 생성 (고정 반복)</label>
       </div>
 
       <div class="form-group">
         <label class="form-label">메모 (선택)</label>
-        <input type="text" id="txMemo" class="form-input" placeholder="예: 할부회차, 대출 잔액 등" />
+        <input type="text" id="txMemo" class="form-input" placeholder="예: 3개월 할부 (2/3), 원리금 잔액 등" />
       </div>
 
       <button class="btn-submit" id="saveBtn" onclick="saveTransaction()">저장하기</button>
@@ -187,254 +183,245 @@
     </div>
   </div>
 
-  <!-- 카테고리 / 설정 모달 -->
+  <!-- 분류 및 계좌 설정 모달 -->
   <div class="modal" id="settingsModal">
     <div class="modal-content">
-      <div class="modal-title">⚙️ 카테고리 & 계좌 설정</div>
+      <div class="modal-title">⚙️ 분류 및 결제수단 설정</div>
 
-      <div class="form-group">
-        <label class="form-label">카테고리 목록 관리</label>
+      <!-- 대분류 추가 -->
+      <div class="tree-box">
+        <div class="tree-header">➕ 새 대분류 추가</div>
         <div class="add-row">
-          <input type="text" id="newCategoryInput" class="form-input" placeholder="새 카테고리 이름" />
-          <button class="btn-add" onclick="addCategory()">추가</button>
-        </div>
-        <div class="chip-container" id="categoryChips"></div>
-      </div>
-
-      <hr style="border:none; border-top:1px solid #E5E7EB; margin:14px 0;" />
-
-      <div class="form-group">
-        <label class="form-label">결제수단 / 계좌 목록 관리</label>
-        <div class="add-row">
-          <input type="text" id="newPaymentInput" class="form-input" placeholder="새 결제수단 이름" />
-          <button class="btn-add" onclick="addPayment()">추가</button>
-        </div>
-        <div class="chip-container" id="paymentChips"></div>
-      </div>
-
-      <hr style="border:none; border-top:1px solid #E5E7EB; margin:14px 0;" />
-
-      <div class="form-group">
-        <label class="form-label">작성자 목록 관리</label>
-        <div class="add-row">
-          <input type="text" id="newAuthorInput" class="form-input" placeholder="새 작성자 이름" />
-          <button class="btn-add" onclick="addAuthor()">추가</button>
-        </div>
-        <div class="chip-container" id="authorChips"></div>
-      </div>
-
-      <hr style="border:none; border-top:1px solid #E5E7EB; margin:14px 0;" />
-
-      <div class="form-group">
-        <label class="form-label">데이터 백업 / 복원</label>
-        <div class="add-row">
-          <button class="btn-close" style="margin-top:0;" onclick="exportData()">내보내기(JSON)</button>
-          <label class="btn-close" style="margin-top:0; text-align:center; display:flex; align-items:center; justify-content:center;">
-            불러오기
-            <input type="file" accept="application/json" onchange="importData(event)" style="display:none;" />
-          </label>
+          <select id="newCatType" class="form-input" style="flex:1;">
+            <option value="지출">지출</option>
+            <option value="수입">수입</option>
+            <option value="저축">저축</option>
+          </select>
+          <input type="text" id="newMainCatInput" class="form-input" style="flex:2;" placeholder="대분류명 (예: 여가)" />
+          <button class="btn-add" onclick="addMainCategory()">추가</button>
         </div>
       </div>
 
-      <button class="btn-close" onclick="closeSettingsModal()">설정 완료</button>
+      <!-- 중분류 추가 -->
+      <div class="tree-box">
+        <div class="tree-header">➕ 새 중분류 추가</div>
+        <div class="add-row">
+          <select id="targetMainCatSelect" class="form-input" style="flex:1;"></select>
+          <input type="text" id="newSubCatInput" class="form-input" style="flex:2;" placeholder="중분류명 (예: 캠핑)" />
+          <button class="btn-add" onclick="addSubCategory()">추가</button>
+        </div>
+      </div>
+
+      <!-- 현재 분류 트리 목록 -->
+      <div class="form-label" style="margin-top:14px;">현재 등록된 분류 목록</div>
+      <div id="categoryTreeDisplay"></div>
+
+      <hr style="border:none; border-top:1px solid #E5E7EB; margin:16px 0;" />
+
+      <!-- 결제수단 관리 -->
+      <div class="form-label">결제수단 / 계좌 관리</div>
+      <div class="add-row">
+        <input type="text" id="newPaymentInput" class="form-input" placeholder="새 결제수단 (예: 토스뱅크)" />
+        <button class="btn-add" onclick="addPayment()">추가</button>
+      </div>
+      <div class="chip-container" id="paymentChips" style="margin-top:8px;"></div>
+
+      <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:20px;">설정 완료</button>
     </div>
   </div>
 
-  <script>
+ <script>
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
 
     let supabaseClient = (SUPABASE_URL !== '여기에_SUPABASE_URL_입력') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
     let transactions = [];
 
-    let categories = JSON.parse(localStorage.getItem('my_ledger_categories')) || [
-      '생활(육아)', '식비', '건강/의료', '대출/이자', '보험', '통신/구독', '경조사', '저축/적금', '급여/수입', '기타'
-    ];
+    // 손글씨 계층 구조 데이터 초기화
+    const defaultCategories = {
+      "수입": {
+        "급여": ["남편", "아내"],
+        "상여": ["남편", "아내", "기타"],
+        "부가수입": ["용돈", "예금이자", "배당금", "기타"]
+      },
+      "저축": {
+        "적금": ["일반적금", "청년적금", "여행적금", "청약"],
+        "투자": ["국내주식", "해외주식", "ETF", "코인"]
+      },
+      "지출": {
+        "고정비": ["대출상환", "통신비", "관리비", "보험료", "구독료"],
+        "소비": ["식비", "생활(육아)", "교통", "건강", "여가", "경조사", "기타"]
+      }
+    };
+
+    let categoryStructure = JSON.parse(localStorage.getItem('my_category_tree')) || defaultCategories;
     let payments = JSON.parse(localStorage.getItem('my_ledger_payments')) || [
       'J 삼성카드', 'J 국민카드', 'D 신한카드', '신한은행(J)', '신한은행(D)', '우리은행(J)', '토스뱅크', '현금/이체'
     ];
-    let authors = JSON.parse(localStorage.getItem('my_ledger_authors')) || ['남편(J)', '아내(D)', '공동'];
+    let authors = ['남편(J)', '아내(D)', '공동'];
 
     const today = new Date();
     let currentYear = today.getFullYear();
     let currentMonth = today.getMonth() + 1;
-    let selectedType = 'EXPENSE';
+    let selectedFlowType = '지출';
     let activeTab = 'ALL';
-    let editingId = null;
-
-    function formatAmountInput(el) {
-      const raw = el.value.replace(/[^0-9]/g, '');
-      el.value = raw ? Number(raw).toLocaleString() : '';
-    }
-
-    function escapeHtml(str) {
-      return String(str ?? '').replace(/[&<>"']/g, (ch) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[ch]));
-    }
 
     async function init() {
       updateMonthText();
       renderDropdowns();
-
+      
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       document.getElementById('txDate').value = `${yyyy}-${mm}-${dd}`;
 
       await loadTransactions();
-      registerServiceWorker();
-      maybeShowInstallBanner();
     }
 
     function updateMonthText() {
       document.getElementById('currentMonthText').innerText = `${currentYear}.${String(currentMonth).padStart(2, '0')}`;
     }
 
+    // 모달창 내 드롭다운 동적 렌더링
     function renderDropdowns() {
-      const catSelect = document.getElementById('txCategory');
-      catSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-
-      const paySelect = document.getElementById('txPayment');
-      paySelect.innerHTML = payments.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
-
       const authSelect = document.getElementById('txAuthor');
-      authSelect.innerHTML = authors.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+      authSelect.innerHTML = authors.map(a => `<option value="${a}">${a}</option>`).join('');
       const localAuthor = localStorage.getItem('my_ledger_author');
       if (localAuthor) authSelect.value = localAuthor;
+
+      const paySelect = document.getElementById('txPayment');
+      paySelect.innerHTML = payments.map(p => `<option value="${p}">${p}</option>`).join('');
+
+      renderMainCategories();
     }
 
-    function renderSettingsChips() {
-      document.getElementById('categoryChips').innerHTML = categories.map((c, i) => `
-        <div class="chip">
-          <span>${escapeHtml(c)}</span>
-          <button class="chip-remove" onclick="removeCategory(${i})">×</button>
-        </div>
-      `).join('');
+    function renderMainCategories() {
+      const mainSelect = document.getElementById('txMainCategory');
+      const mains = Object.keys(categoryStructure[selectedFlowType] || {});
+      mainSelect.innerHTML = mains.map(m => `<option value="${m}">${m}</option>`).join('');
+      handleMainCategoryChange();
+    }
 
+    function handleMainCategoryChange() {
+      const mainCat = document.getElementById('txMainCategory').value;
+      const subSelect = document.getElementById('txSubCategory');
+      const subs = (categoryStructure[selectedFlowType] && categoryStructure[selectedFlowType][mainCat]) || [];
+      subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function selectFlowType(type, e) {
+      selectedFlowType = type;
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+      e.target.classList.add('selected');
+      renderMainCategories();
+      
+      // 고정비/적금인 경우 반복 체크 기본값
+      const mainCat = document.getElementById('txMainCategory').value;
+      document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
+    }
+
+    // 설정 화면 렌더링
+    function renderSettings() {
+      // 대분류 선택 드롭다운 채우기
+      const targetMainSelect = document.getElementById('targetMainCatSelect');
+      let options = [];
+      Object.keys(categoryStructure).forEach(flow => {
+        Object.keys(categoryStructure[flow]).forEach(main => {
+          options.push(`<option value="${flow}|${main}">[${flow}] ${main}</option>`);
+        });
+      });
+      targetMainSelect.innerHTML = options.join('');
+
+      // 트리 구조 표시
+      let treeHtml = '';
+      Object.keys(categoryStructure).forEach(flow => {
+        treeHtml += `<div class="tree-box"><div class="tree-header" style="color:var(--primary);">📁 [${flow}]</div>`;
+        Object.keys(categoryStructure[flow]).forEach(main => {
+          treeHtml += `<div style="margin: 6px 0 2px; font-size:0.8rem; font-weight:700; display:flex; justify-content:space-between;">
+            <span>↳ ${main}</span>
+            <button class="chip-remove" onclick="removeMainCategory('${flow}', '${main}')">대분류 삭제</button>
+          </div><div class="chip-container">`;
+          categoryStructure[flow][main].forEach(sub => {
+            treeHtml += `<div class="chip"><span>${sub}</span><button class="chip-remove" onclick="removeSubCategory('${flow}', '${main}', '${sub}')">×</button></div>`;
+          });
+          treeHtml += `</div>`;
+        });
+        treeHtml += `</div>`;
+      });
+      document.getElementById('categoryTreeDisplay').innerHTML = treeHtml;
+
+      // 결제수단 칩 표시
       document.getElementById('paymentChips').innerHTML = payments.map((p, i) => `
-        <div class="chip">
-          <span>${escapeHtml(p)}</span>
-          <button class="chip-remove" onclick="removePayment(${i})">×</button>
-        </div>
-      `).join('');
-
-      document.getElementById('authorChips').innerHTML = authors.map((a, i) => `
-        <div class="chip">
-          <span>${escapeHtml(a)}</span>
-          <button class="chip-remove" onclick="removeAuthor(${i})">×</button>
-        </div>
+        <div class="chip"><span>${p}</span><button class="chip-remove" onclick="removePayment(${i})">×</button></div>
       `).join('');
     }
 
-    function addAuthor() {
-      const input = document.getElementById('newAuthorInput');
-      const val = input.value.trim();
-      if (!val || authors.includes(val)) return;
-      authors.push(val);
-      localStorage.setItem('my_ledger_authors', JSON.stringify(authors));
-      input.value = '';
-      renderDropdowns();
-      renderSettingsChips();
+    function addMainCategory() {
+      const flow = document.getElementById('newCatType').value;
+      const main = document.getElementById('newMainCatInput').value.trim();
+      if (!main) return;
+      if (!categoryStructure[flow]) categoryStructure[flow] = {};
+      if (!categoryStructure[flow][main]) {
+        categoryStructure[flow][main] = ['일반'];
+        saveCategoryTree();
+      }
+      document.getElementById('newMainCatInput').value = '';
     }
 
-    function removeAuthor(index) {
-      if (authors.length <= 1) { alert('작성자는 최소 1명 이상 있어야 합니다.'); return; }
-      if (confirm(`'${authors[index]}' 작성자를 삭제하시겠습니까?`)) {
-        authors.splice(index, 1);
-        localStorage.setItem('my_ledger_authors', JSON.stringify(authors));
-        renderDropdowns();
-        renderSettingsChips();
+    function removeMainCategory(flow, main) {
+      if (confirm(`'${main}' 대분류와 하위 중분류를 모두 삭제하시겠습니까?`)) {
+        delete categoryStructure[flow][main];
+        saveCategoryTree();
       }
     }
 
-    function addCategory() {
-      const input = document.getElementById('newCategoryInput');
-      const val = input.value.trim();
-      if (!val || categories.includes(val)) return;
-      categories.push(val);
-      localStorage.setItem('my_ledger_categories', JSON.stringify(categories));
-      input.value = '';
-      renderDropdowns();
-      renderSettingsChips();
+    function addSubCategory() {
+      const target = document.getElementById('targetMainCatSelect').value;
+      if (!target) return;
+      const [flow, main] = target.split('|');
+      const sub = document.getElementById('newSubCatInput').value.trim();
+      if (!sub) return;
+      if (!categoryStructure[flow][main].includes(sub)) {
+        categoryStructure[flow][main].push(sub);
+        saveCategoryTree();
+      }
+      document.getElementById('newSubCatInput').value = '';
     }
 
-    function removeCategory(index) {
-      if (confirm(`'${categories[index]}' 카테고리를 삭제하시겠습니까?`)) {
-        categories.splice(index, 1);
-        localStorage.setItem('my_ledger_categories', JSON.stringify(categories));
-        renderDropdowns();
-        renderSettingsChips();
-      }
+    function removeSubCategory(flow, main, sub) {
+      categoryStructure[flow][main] = categoryStructure[flow][main].filter(s => s !== sub);
+      saveCategoryTree();
+    }
+
+    function saveCategoryTree() {
+      localStorage.setItem('my_category_tree', JSON.stringify(categoryStructure));
+      renderSettings();
+      renderDropdowns();
     }
 
     function addPayment() {
-      const input = document.getElementById('newPaymentInput');
-      const val = input.value.trim();
+      const val = document.getElementById('newPaymentInput').value.trim();
       if (!val || payments.includes(val)) return;
       payments.push(val);
       localStorage.setItem('my_ledger_payments', JSON.stringify(payments));
-      input.value = '';
+      document.getElementById('newPaymentInput').value = '';
+      renderSettings();
       renderDropdowns();
-      renderSettingsChips();
     }
 
-    function removePayment(index) {
-      if (confirm(`'${payments[index]}' 결제수단을 삭제하시겠습니까?`)) {
-        payments.splice(index, 1);
+    function removePayment(i) {
+      if (confirm(`'${payments[i]}' 결제수단을 삭제하시겠습니까?`)) {
+        payments.splice(i, 1);
         localStorage.setItem('my_ledger_payments', JSON.stringify(payments));
+        renderSettings();
         renderDropdowns();
-        renderSettingsChips();
       }
     }
 
-    function openSettingsModal() {
-      renderSettingsChips();
-      document.getElementById('settingsModal').classList.add('open');
-    }
-    function closeSettingsModal() {
-      document.getElementById('settingsModal').classList.remove('open');
-    }
-
-    function exportData() {
-      const payload = { transactions, categories, payments };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `가계부_백업_${currentYear}-${String(currentMonth).padStart(2, '0')}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function importData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (data.transactions) {
-            transactions = data.transactions;
-            localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
-          }
-          if (data.categories) {
-            categories = data.categories;
-            localStorage.setItem('my_ledger_categories', JSON.stringify(categories));
-          }
-          if (data.payments) {
-            payments = data.payments;
-            localStorage.setItem('my_ledger_payments', JSON.stringify(payments));
-          }
-          renderDropdowns();
-          render();
-          alert('불러오기 완료');
-        } catch (err) {
-          alert('파일을 읽을 수 없습니다: ' + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
+    function openSettingsModal() { renderSettings(); document.getElementById('settingsModal').classList.add('open'); }
+    function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
+    function openModal() { document.getElementById('inputModal').classList.add('open'); }
+    function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
     async function loadTransactions() {
       if (!supabaseClient) {
@@ -459,10 +446,11 @@
           const originalDay = template.date.split('-')[2] || '01';
           newEntries.push({
             date: `${targetPrefix}-${originalDay}`,
-            type: template.type,
+            flow_type: template.flow_type,
+            main_category: template.main_category,
+            sub_category: template.sub_category,
             title: template.title,
             amount: template.amount,
-            category: template.category,
             payment: template.payment,
             memo: template.memo,
             author: template.author,
@@ -499,60 +487,12 @@
       render();
     }
 
-    function selectType(type, e) {
-      selectedType = type;
-      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-      e.target.classList.add('selected');
-      document.getElementById('txIsRecurring').checked = (type === 'FIXED' || type === 'SAVING');
-    }
-
-    function openModal() {
-      editingId = null;
-      document.querySelector('#inputModal .modal-title').innerText = '가계부 등록';
-      document.getElementById('saveBtn').innerText = '저장하기';
-      document.getElementById('txTitle').value = '';
-      document.getElementById('txAmount').value = '';
-      document.getElementById('txMemo').value = '';
-      document.getElementById('txIsRecurring').checked = false;
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('txDate').value = `${yyyy}-${mm}-${dd}`;
-      selectType('EXPENSE', { target: document.querySelector('.type-btn') });
-      document.getElementById('inputModal').classList.add('open');
-    }
-
-    function openEditModal(id) {
-      const t = transactions.find(tx => tx.id === id);
-      if (!t) return;
-      editingId = id;
-      selectedType = t.type;
-      document.querySelector('#inputModal .modal-title').innerText = '가계부 수정';
-      document.getElementById('saveBtn').innerText = '수정 완료';
-      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-      const idx = ['EXPENSE', 'FIXED', 'INCOME', 'SAVING'].indexOf(t.type);
-      if (idx >= 0) document.querySelectorAll('.type-btn')[idx].classList.add('selected');
-      document.getElementById('txAuthor').value = t.author || '공동';
-      document.getElementById('txDate').value = t.date;
-      document.getElementById('txTitle').value = t.title;
-      document.getElementById('txAmount').value = Number(t.amount).toLocaleString();
-      document.getElementById('txCategory').value = t.category;
-      document.getElementById('txPayment').value = t.payment;
-      document.getElementById('txIsRecurring').checked = !!t.is_recurring;
-      document.getElementById('txMemo').value = t.memo || '';
-      document.getElementById('inputModal').classList.add('open');
-    }
-
-    function closeModal() {
-      editingId = null;
-      document.getElementById('inputModal').classList.remove('open');
-    }
-
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
-      const amount = Number(document.getElementById('txAmount').value.replace(/[^0-9]/g, ''));
+      const amount = Number(document.getElementById('txAmount').value);
       const date = document.getElementById('txDate').value;
-      const category = document.getElementById('txCategory').value;
+      const mainCat = document.getElementById('txMainCategory').value;
+      const subCat = document.getElementById('txSubCategory').value;
       const payment = document.getElementById('txPayment').value;
       const memo = document.getElementById('txMemo').value.trim();
       const author = document.getElementById('txAuthor').value;
@@ -564,46 +504,39 @@
       }
 
       localStorage.setItem('my_ledger_author', author);
-      const newTx = { date, type: selectedType, title, amount, category, payment, memo, author, is_recurring };
-      const saveBtn = document.getElementById('saveBtn');
+      const newTx = { 
+        date, 
+        flow_type: selectedFlowType, 
+        main_category: mainCat, 
+        sub_category: subCat, 
+        title, 
+        amount, 
+        payment, 
+        memo, 
+        author, 
+        is_recurring 
+      };
 
-      if (editingId !== null) {
-        // 수정 모드
-        if (supabaseClient) {
-          saveBtn.innerText = '저장 중...';
-          saveBtn.disabled = true;
-          const { error } = await supabaseClient.from('transactions').update(newTx).eq('id', editingId);
-          saveBtn.disabled = false;
-          if (error) { alert('수정 실패: ' + error.message); return; }
-          await loadTransactions();
-        } else {
-          const idx = transactions.findIndex(t => t.id === editingId);
-          if (idx !== -1) {
-            newTx.id = editingId;
-            transactions[idx] = newTx;
-            localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
-          }
-          render();
-        }
+      if (supabaseClient) {
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.innerText = '저장 중...';
+        saveBtn.disabled = true;
+        const { error } = await supabaseClient.from('transactions').insert([newTx]);
+        saveBtn.innerText = '저장하기';
+        saveBtn.disabled = false;
+        if (error) { alert('저장 실패: ' + error.message); return; }
+        await loadTransactions();
       } else {
-        // 신규 등록
-        if (supabaseClient) {
-          saveBtn.innerText = '저장 중...';
-          saveBtn.disabled = true;
-          const { error } = await supabaseClient.from('transactions').insert([newTx]);
-          saveBtn.disabled = false;
-          if (error) { alert('저장 실패: ' + error.message); return; }
-          await loadTransactions();
-        } else {
-          newTx.id = Date.now();
-          transactions.push(newTx);
-          localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
-          render();
-        }
+        newTx.id = Date.now();
+        transactions.push(newTx);
+        localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
+        render();
       }
 
-      saveBtn.innerText = '저장하기';
       closeModal();
+      document.getElementById('txTitle').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txMemo').value = '';
     }
 
     async function deleteTransaction(id) {
@@ -625,64 +558,69 @@
       let inc = 0, exp = 0, fix = 0, sav = 0;
       monthlyData.forEach(t => {
         const amt = Number(t.amount) || 0;
-        if (t.type === 'INCOME') inc += amt;
-        else if (t.type === 'EXPENSE') exp += amt;
-        else if (t.type === 'FIXED') fix += amt;
-        else if (t.type === 'SAVING') sav += amt;
+        const flow = t.flow_type || t.type;
+        const main = t.main_category || '';
+
+        if (flow === '수입' || flow === 'INCOME') inc += amt;
+        else if (flow === '저축' || flow === 'SAVING') sav += amt;
+        else if (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED') {
+          if (main === '고정비' || flow === 'FIXED') fix += amt;
+          else exp += amt;
+        }
       });
 
       document.getElementById('totalIncome').innerText = inc.toLocaleString() + '원';
       document.getElementById('totalExpense').innerText = exp.toLocaleString() + '원';
       document.getElementById('totalFixed').innerText = fix.toLocaleString() + '원';
       document.getElementById('totalSaving').innerText = sav.toLocaleString() + '원';
-
+      
       const net = inc - (exp + fix);
       const netElem = document.getElementById('netBalance');
       netElem.innerText = (net >= 0 ? '+' : '') + net.toLocaleString() + '원';
       netElem.style.color = net >= 0 ? 'var(--text)' : 'var(--expense)';
 
-      const filtered = monthlyData.filter(t => activeTab === 'ALL' ? true : t.type === activeTab);
-      const listContainer = document.getElementById('transactionList');
+      const filtered = monthlyData.filter(t => {
+        if (activeTab === 'ALL') return true;
+        const flow = t.flow_type || t.type;
+        if (activeTab === '지출') return flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED';
+        if (activeTab === '수입') return flow === '수입' || flow === 'INCOME';
+        if (activeTab === '저축') return flow === '저축' || flow === 'SAVING';
+        return true;
+      });
 
+      const listContainer = document.getElementById('transactionList');
       if (filtered.length === 0) {
         listContainer.innerHTML = '<div style="text-align:center; color:#9CA3AF; padding: 40px 0;">등록된 내역이 없습니다.</div>';
         return;
       }
 
-      listContainer.innerHTML = filtered.map(t => `
-        <div class="item-card">
-          <div class="item-left" onclick="openEditModal(${t.id})" style="cursor:pointer;">
-            <div class="item-title">${escapeHtml(t.title)}</div>
-            <div class="item-meta">
-              <span>${t.date.slice(5)}</span>
-              <span class="tag">${escapeHtml(t.category)}</span>
-              ${t.is_recurring ? `<span class="tag-repeat">매월반복</span>` : ''}
-              <span class="tag-author">${escapeHtml(t.author || '공동')}</span>
-              <span>${escapeHtml(t.payment)}</span>
-              ${t.memo ? `<span>• ${escapeHtml(t.memo)}</span>` : ''}
+      listContainer.innerHTML = filtered.map(t => {
+        const flow = t.flow_type || t.type;
+        const isInc = (flow === '수입' || flow === 'INCOME');
+        const catLabel = t.main_category ? `${t.main_category} > ${t.sub_category}` : (t.category || '기타');
+
+        return `
+          <div class="item-card">
+            <div class="item-left">
+              <div class="item-title">${t.title}</div>
+              <div class="item-meta">
+                <span>${t.date.slice(5)}</span>
+                <span class="tag">${catLabel}</span>
+                ${t.is_recurring ? `<span class="tag-repeat">반복</span>` : ''}
+                <span class="tag-author">${t.author || '공동'}</span>
+                <span>${t.payment || ''}</span>
+                ${t.memo ? `<span>• ${t.memo}</span>` : ''}
+              </div>
+            </div>
+            <div class="item-right">
+              <div class="item-amount ${isInc ? 'text-income' : 'text-expense'}">
+                ${isInc ? '+' : '-'}${Number(t.amount).toLocaleString()}원
+              </div>
+              <button class="item-delete" onclick="deleteTransaction(${t.id})">삭제</button>
             </div>
           </div>
-          <div class="item-right">
-            <div class="item-amount ${t.type === 'INCOME' ? 'text-income' : 'text-expense'}">
-              ${t.type === 'INCOME' ? '+' : '-'}${Number(t.amount).toLocaleString()}원
-            </div>
-            <button class="item-delete" onclick="deleteTransaction(${t.id})">삭제</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function registerServiceWorker() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js').catch(() => {});
-      }
-    }
-
-    function maybeShowInstallBanner() {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      if (!isStandalone) {
-        document.getElementById('installBanner').classList.add('show');
-      }
+        `;
+      }).join('');
     }
 
     init();
