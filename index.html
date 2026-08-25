@@ -7,6 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>우리가계부</title>
+  <!-- Chart.js, SortableJS, Supabase 로드 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -31,8 +32,6 @@
     .btn-settings { background: none; border: 1px solid #E5E7EB; border-radius: 8px; padding: 5px 8px; font-size: 0.8rem; cursor: pointer; color: var(--subtext); }
     .month-selector { display: flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.9rem; }
     .month-btn { background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
-
-    #errorBanner { display: none; background: #FEE2E2; color: #DC2626; padding: 10px 16px; font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid #FCA5A5; }
 
     .summary-card { background: var(--card); margin: 14px 16px; padding: 16px; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .balance-title { font-size: 0.75rem; color: var(--subtext); margin-bottom: 2px; }
@@ -89,7 +88,6 @@
     .form-group { margin-bottom: 12px; }
     .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
     .form-input, select { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
-    .date-picker-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; }
 
     .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
     .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; }
@@ -112,8 +110,6 @@
   </style>
 </head>
 <body>
-
-  <div id="errorBanner"></div>
 
   <div class="header">
     <h1>우리가계부 💑</h1>
@@ -193,11 +189,7 @@
 
       <div class="form-group">
         <label class="form-label">날짜</label>
-        <div class="date-picker-row">
-          <select id="txYear" class="form-input" onchange="updateDaysInMonth()"></select>
-          <select id="txMonth" class="form-input" onchange="updateDaysInMonth()"></select>
-          <select id="txDay" class="form-input"></select>
-        </div>
+        <input type="date" id="txDate" class="form-input" />
       </div>
 
       <div class="category-grid">
@@ -286,7 +278,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '7.0';
+    const APP_VERSION = '8.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -333,18 +325,10 @@
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
-    function showError(msg) {
-      const b = document.getElementById('errorBanner');
-      if (b) {
-        b.style.display = 'block';
-        b.innerText = '⚠️ ' + msg;
-      }
-    }
-
     async function init() {
       updateMonthText();
-      initKoreanDatePicker();
       renderDropdowns();
+      setDefaultDate();
       await loadTransactions();
       listenRealtime();
     }
@@ -353,59 +337,22 @@
       document.getElementById('currentMonthText').innerText = `${currentYear}년 ${currentMonth}월`;
     }
 
-    function initKoreanDatePicker() {
-      const ySelect = document.getElementById('txYear');
-      const mSelect = document.getElementById('txMonth');
-      
-      const yearList = [];
-      for (let y = currentYear - 2; y <= currentYear + 2; y++) yearList.push(y);
-      ySelect.innerHTML = yearList.map(y => `<option value="${y}">${y}년</option>`).join('');
-      ySelect.value = currentYear;
-
-      mSelect.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}월</option>`).join('');
-      mSelect.value = currentMonth;
-
-      updateDaysInMonth();
-      document.getElementById('txDay').value = today.getDate();
+    function setDefaultDate() {
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('txDate').value = `${yyyy}-${mm}-${dd}`;
     }
 
-    function updateDaysInMonth() {
-      const y = Number(document.getElementById('txYear').value) || currentYear;
-      const m = Number(document.getElementById('txMonth').value) || currentMonth;
-      const dSelect = document.getElementById('txDay');
-      const lastDay = new Date(y, m, 0).getDate();
-      
-      const currentVal = Number(dSelect.value) || today.getDate();
-      dSelect.innerHTML = Array.from({length: lastDay}, (_, i) => `<option value="${i+1}">${i+1}일</option>`).join('');
-      dSelect.value = Math.min(currentVal, lastDay);
-    }
-
-    function getSelectedDateParts() {
-      const y = Number(document.getElementById('txYear').value);
-      const m = Number(document.getElementById('txMonth').value);
-      const d = Number(document.getElementById('txDay').value);
-      const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      return { year: y, month: m, day: d, dateStr: dateStr };
-    }
-
-    function parseDate(dateVal) {
-      if (!dateVal) return null;
-      const str = String(dateVal);
-      const match = str.match(/(\d{4})[^\d](\d{1,2})[^\d](\d{1,2})/);
-      if (match) {
-        return {
-          year: parseInt(match[1], 10),
-          month: parseInt(match[2], 10),
-          day: parseInt(match[3], 10)
-        };
-      }
-      return null;
-    }
-
+    // 목록에 표시할 때 무조건 '8월 25일' 한국식으로 깔끔하게 변환
     function formatKoreanDate(dateVal) {
-      const p = parseDate(dateVal);
-      if (p) return `${p.month}월 ${p.day}일`;
-      return String(dateVal);
+      if (!dateVal) return '';
+      const clean = String(dateVal).split('T')[0];
+      const parts = clean.split('-');
+      if (parts.length >= 3) {
+        return `${Number(parts[1])}월 ${Number(parts[2])}일`;
+      }
+      return dateVal;
     }
 
     function switchMainView(view) {
@@ -515,7 +462,7 @@
 
     function initDragAndDrop() {
       const payContainer = document.getElementById('paymentChips');
-      if (payContainer) {
+      if (payContainer && window.Sortable) {
         new Sortable(payContainer, {
           animation: 150,
           handle: '.chip-handle',
@@ -528,17 +475,19 @@
       }
 
       document.querySelectorAll('.sub-chip-container').forEach(container => {
-        new Sortable(container, {
-          animation: 150,
-          handle: '.chip-handle',
-          onEnd: function () {
-            const flow = container.getAttribute('data-flow');
-            const main = container.getAttribute('data-main');
-            categoryStructure[flow][main] = Array.from(container.children).map(child => child.getAttribute('data-id'));
-            localStorage.setItem('my_category_tree', JSON.stringify(categoryStructure));
-            renderDropdowns();
-          }
-        });
+        if (window.Sortable) {
+          new Sortable(container, {
+            animation: 150,
+            handle: '.chip-handle',
+            onEnd: function () {
+              const flow = container.getAttribute('data-flow');
+              const main = container.getAttribute('data-main');
+              categoryStructure[flow][main] = Array.from(container.children).map(child => child.getAttribute('data-id'));
+              localStorage.setItem('my_category_tree', JSON.stringify(categoryStructure));
+              renderDropdowns();
+            }
+          });
+        }
       });
     }
 
@@ -609,23 +558,25 @@
     
     function openModal() { 
       applyLastUsedFlowType();
-      document.getElementById('txYear').value = currentYear;
-      document.getElementById('txMonth').value = currentMonth;
-      updateDaysInMonth();
       document.getElementById('inputModal').classList.add('open'); 
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
+    // 데이터베이스 조회
     async function loadTransactions() {
-      const { data, error } = await supabaseClient
-        .from('transactions')
-        .select('*')
-        .order('date', { ascending: false });
-      
-      if (error) {
-        showError('DB 조회 실패: ' + error.message);
-      } else if (data) {
-        transactions = data;
+      try {
+        const { data, error } = await supabaseClient
+          .from('transactions')
+          .select('*')
+          .order('date', { ascending: false });
+        
+        if (error) {
+          console.error('DB 조회 에러:', error);
+        } else if (data) {
+          transactions = data;
+        }
+      } catch (err) {
+        console.error('데이터 로드 실패:', err);
       }
       await autoApplyRecurringExpenses();
       render();
@@ -641,22 +592,17 @@
     }
 
     async function autoApplyRecurringExpenses() {
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const recurringTemplates = transactions.filter(t => t.is_recurring === true);
-      const currentMonthData = transactions.filter(t => {
-        const p = parseDate(t.date);
-        return p && p.year === currentYear && p.month === currentMonth;
-      });
+      const currentMonthData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
 
       const newEntries = [];
       recurringTemplates.forEach(template => {
         const exists = currentMonthData.some(item => item.title === template.title && Number(item.amount) === Number(template.amount));
         if (!exists) {
-          const tp = parseDate(template.date);
-          const originalDay = tp ? tp.day : 1;
-          const targetDateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(originalDay).padStart(2, '0')}`;
-          
+          const originalDay = String(template.date).split('-')[2] || '01';
           newEntries.push({
-            date: targetDateStr,
+            date: `${targetPrefix}-${originalDay.slice(0,2)}`,
             flow_type: template.flow_type || template.type,
             type: template.flow_type || template.type,
             main_category: template.main_category,
@@ -696,10 +642,11 @@
       render();
     }
 
+    // 가계부 저장 로직
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
-      const dateParts = getSelectedDateParts();
+      const date = document.getElementById('txDate').value;
       const mainCat = document.getElementById('txMainCategory').value;
       const subCat = document.getElementById('txSubCategory').value;
       const payment = document.getElementById('txPayment').value;
@@ -707,8 +654,8 @@
       const author = document.getElementById('txAuthor').value;
       const is_recurring = document.getElementById('txIsRecurring').checked;
 
-      if (!title || !amount) {
-        alert('내용과 금액을 입력해주세요.');
+      if (!title || !amount || !date) {
+        alert('내용, 금액, 날짜를 모두 입력해주세요.');
         return;
       }
 
@@ -722,39 +669,47 @@
       localStorage.setItem('my_ledger_author', author);
 
       const newTx = { 
-        date: dateParts.dateStr,
+        date: date,
         type: selectedFlowType, 
         flow_type: selectedFlowType, 
         main_category: mainCat, 
         sub_category: subCat, 
         category: `${mainCat} > ${subCat}`,
-        title, 
-        amount, 
-        payment, 
-        memo, 
-        author, 
-        is_recurring 
+        title: title, 
+        amount: amount, 
+        payment: payment, 
+        memo: memo, 
+        author: author, 
+        is_recurring: is_recurring 
       };
 
       const saveBtn = document.getElementById('saveBtn');
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
-      const { error } = await supabaseClient.from('transactions').insert([newTx]);
-      saveBtn.innerText = '저장하기';
-      saveBtn.disabled = false;
-      
-      if (error) { 
-        showError('저장 실패: ' + error.message);
-        alert('저장 실패: ' + error.message); 
-        return; 
+      try {
+        const { error } = await supabaseClient.from('transactions').insert([newTx]);
+        saveBtn.innerText = '저장하기';
+        saveBtn.disabled = false;
+        
+        if (error) { 
+          alert('저장 실패: ' + error.message); 
+          return; 
+        }
+
+        // 입력한 날짜의 월로 즉시 상단 뷰 이동
+        const dateParts = date.split('-');
+        currentYear = Number(dateParts[0]);
+        currentMonth = Number(dateParts[1]);
+        updateMonthText();
+        
+        await loadTransactions();
+      } catch (err) {
+        saveBtn.innerText = '저장하기';
+        saveBtn.disabled = false;
+        alert('저장 오류: ' + err.message);
+        return;
       }
-      
-      currentYear = dateParts.year;
-      currentMonth = dateParts.month;
-      updateMonthText();
-      
-      await loadTransactions();
 
       closeModal();
       document.getElementById('txTitle').value = '';
@@ -771,10 +726,13 @@
       if (currentMainView === 'stats') renderStats();
     }
 
+    // 화면 렌더링
     function render() {
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      
       const monthlyData = transactions.filter(t => {
-        const p = parseDate(t.date);
-        return p && p.year === currentYear && p.month === currentMonth;
+        if (!t.date) return false;
+        return String(t.date).startsWith(targetPrefix);
       });
 
       let inc = 0, exp = 0, fix = 0, sav = 0;
@@ -852,9 +810,10 @@
     ];
 
     function renderStats() {
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const monthlyExpenses = transactions.filter(t => {
-        const p = parseDate(t.date);
-        const isThisMonth = p && p.year === currentYear && p.month === currentMonth;
+        if (!t.date) return false;
+        const isThisMonth = String(t.date).startsWith(targetPrefix);
         const flow = t.flow_type || t.type;
         const isExpense = (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
         return isThisMonth && isExpense;
