@@ -23,7 +23,7 @@
       --text: #1F2937;
       --subtext: #6B7280;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
     
     .header { background: var(--card); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 10; }
@@ -88,6 +88,10 @@
     .form-group { margin-bottom: 12px; }
     .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
     .form-input, select { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
+    
+    /* 한국식 날짜 선택기 전용 스타일 */
+    .date-picker-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; }
+
     .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
     .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; }
     .btn-close { width: 100%; background: #F3F4F6; color: var(--subtext); border: none; padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
@@ -192,9 +196,14 @@
         <select id="txAuthor" class="form-input"></select>
       </div>
 
+      <!-- 한국식 3분할 날짜 선택기 -->
       <div class="form-group">
-        <label class="form-label">날짜</label>
-        <input type="date" id="txDate" class="form-input" />
+        <label class="form-label">날짜 (한국식 선택)</label>
+        <div class="date-picker-row">
+          <select id="txYear" class="form-input" onchange="updateDaysInMonth()"></select>
+          <select id="txMonth" class="form-input" onchange="updateDaysInMonth()"></select>
+          <select id="txDay" class="form-input"></select>
+        </div>
       </div>
 
       <div class="category-grid">
@@ -283,7 +292,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '3.5';
+    const APP_VERSION = '4.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
@@ -331,13 +340,8 @@
 
     async function init() {
       updateMonthText();
+      initKoreanDatePicker();
       renderDropdowns();
-      
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('txDate').value = `${yyyy}-${mm}-${dd}`;
-
       await loadTransactions();
       listenRealtime();
     }
@@ -346,11 +350,45 @@
       document.getElementById('currentMonthText').innerText = `${currentYear}년 ${currentMonth}월`;
     }
 
+    // 한국식 날짜 선택기 초기화 (년, 월, 일 셀렉트)
+    function initKoreanDatePicker() {
+      const ySelect = document.getElementById('txYear');
+      const mSelect = document.getElementById('txMonth');
+      
+      ySelect.innerHTML = [currentYear - 1, currentYear, currentYear + 1].map(y => `<option value="${y}">${y}년</option>`).join('');
+      ySelect.value = currentYear;
+
+      mSelect.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}월</option>`).join('');
+      mSelect.value = currentMonth;
+
+      updateDaysInMonth();
+      document.getElementById('txDay').value = today.getDate();
+    }
+
+    function updateDaysInMonth() {
+      const y = Number(document.getElementById('txYear').value);
+      const m = Number(document.getElementById('txMonth').value);
+      const dSelect = document.getElementById('txDay');
+      const lastDay = new Date(y, m, 0).getDate();
+      
+      const currentVal = Number(dSelect.value) || today.getDate();
+      dSelect.innerHTML = Array.from({length: lastDay}, (_, i) => `<option value="${i+1}">${i+1}일</option>`).join('');
+      dSelect.value = Math.min(currentVal, lastDay);
+    }
+
+    function getSelectedDateString() {
+      const y = document.getElementById('txYear').value;
+      const m = String(document.getElementById('txMonth').value).padStart(2, '0');
+      const d = String(document.getElementById('txDay').value).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
     function formatKoreanDate(dateStr) {
       if (!dateStr) return '';
-      const parts = String(dateStr).split('-');
+      const clean = String(dateStr).split('T')[0];
+      const parts = clean.split('-');
       if (parts.length >= 3) {
-        return `${Number(parts[1])}월 ${Number(parts[2].slice(0,2))}일`;
+        return `${Number(parts[1])}월 ${Number(parts[2])}일`;
       }
       return dateStr;
     }
@@ -557,6 +595,9 @@
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
     function openModal() { 
       applyLastUsedFlowType();
+      document.getElementById('txYear').value = currentYear;
+      document.getElementById('txMonth').value = currentMonth;
+      updateDaysInMonth();
       document.getElementById('inputModal').classList.add('open'); 
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
@@ -570,13 +611,14 @@
           .from('transactions')
           .select('*')
           .order('date', { ascending: false });
-        if (!error && data) transactions = data;
+        if (!error && data) {
+          transactions = data;
+        }
       }
       await autoApplyRecurringExpenses();
       render();
     }
 
-    // 부부 실시간 동기화
     function listenRealtime() {
       if (!supabaseClient) return;
       supabaseClient
@@ -590,7 +632,11 @@
     async function autoApplyRecurringExpenses() {
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const recurringTemplates = transactions.filter(t => t.is_recurring === true);
-      const currentMonthData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
+      const currentMonthData = transactions.filter(t => {
+        if (!t.date) return false;
+        const d = String(t.date).split('T')[0];
+        return d.startsWith(targetPrefix);
+      });
 
       const newEntries = [];
       recurringTemplates.forEach(template => {
@@ -642,11 +688,11 @@
       render();
     }
 
-    // 거래 내역 저장
+    // 가계부 저장
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
-      const date = document.getElementById('txDate').value;
+      const date = getSelectedDateString();
       const mainCat = document.getElementById('txMainCategory').value;
       const subCat = document.getElementById('txSubCategory').value;
       const payment = document.getElementById('txPayment').value;
@@ -654,8 +700,8 @@
       const author = document.getElementById('txAuthor').value;
       const is_recurring = document.getElementById('txIsRecurring').checked;
 
-      if (!title || !amount || !date) {
-        alert('내용, 금액, 날짜를 모두 입력해주세요.');
+      if (!title || !amount) {
+        alert('내용과 금액을 입력해주세요.');
         return;
       }
 
@@ -697,7 +743,7 @@
         await loadTransactions();
       } else {
         newTx.id = Date.now();
-        transactions.push(newTx);
+        transactions.unshift(newTx);
         localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
         saveBtn.innerText = '저장하기';
         saveBtn.disabled = false;
@@ -724,12 +770,14 @@
       if (currentMainView === 'stats') renderStats();
     }
 
-    // 메인 리스트 및 요약 렌더링
+    // 메인 리스트 및 상단 카드 렌더링
     function render() {
-      const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      
       const monthlyData = transactions.filter(t => {
         if (!t.date) return false;
-        return String(t.date).startsWith(prefix);
+        const d = String(t.date).split('T')[0];
+        return d.startsWith(targetPrefix);
       });
 
       let inc = 0, exp = 0, fix = 0, sav = 0;
@@ -807,9 +855,11 @@
     ];
 
     function renderStats() {
-      const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const monthlyExpenses = transactions.filter(t => {
-        const isThisMonth = t.date && String(t.date).startsWith(prefix);
+        if (!t.date) return false;
+        const d = String(t.date).split('T')[0];
+        const isThisMonth = d.startsWith(targetPrefix);
         const flow = t.flow_type || t.type;
         const isExpense = (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
         return isThisMonth && isExpense;
