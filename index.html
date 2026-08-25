@@ -32,7 +32,6 @@
     .month-selector { display: flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.9rem; }
     .month-btn { background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
 
-    /* 디버그 에러 알림바 */
     #errorBanner { display: none; background: #FEE2E2; color: #DC2626; padding: 10px 16px; font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid #FCA5A5; }
 
     .summary-card { background: var(--card); margin: 14px 16px; padding: 16px; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -287,16 +286,12 @@
   </div>
 
   <script>
-    const APP_VERSION = '5.0';
+    const APP_VERSION = '7.0';
 
-    // 💡 Supabase 접속 정보 (키가 정확한지 확인해 주세요)
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
 
-    let supabaseClient = null;
-    if (SUPABASE_URL && !SUPABASE_URL.includes('여기에')) {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let transactions = [];
     let doughnutChartInstance = null;
@@ -393,7 +388,6 @@
       return { year: y, month: m, day: d, dateStr: dateStr };
     }
 
-    // 강력한 정규식 날짜 파서 (모든 DB 날짜 형태 대응)
     function parseDate(dateVal) {
       if (!dateVal) return null;
       const str = String(dateVal);
@@ -622,28 +616,22 @@
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
-    // 데이터베이스 조회
     async function loadTransactions() {
-      if (!supabaseClient) {
-        transactions = JSON.parse(localStorage.getItem('my_ledger_local')) || [];
-      } else {
-        const { data, error } = await supabaseClient
-          .from('transactions')
-          .select('*')
-          .order('date', { ascending: false });
-        
-        if (error) {
-          showError('DB 조회 실패: ' + error.message);
-        } else if (data) {
-          transactions = data;
-        }
+      const { data, error } = await supabaseClient
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) {
+        showError('DB 조회 실패: ' + error.message);
+      } else if (data) {
+        transactions = data;
       }
       await autoApplyRecurringExpenses();
       render();
     }
 
     function listenRealtime() {
-      if (!supabaseClient) return;
       supabaseClient
         .channel('public:transactions')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
@@ -685,14 +673,9 @@
       });
 
       if (newEntries.length > 0) {
-        if (supabaseClient) {
-          await supabaseClient.from('transactions').insert(newEntries);
-          const { data } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
-          if (data) transactions = data;
-        } else {
-          newEntries.forEach(item => { item.id = Date.now() + Math.random(); transactions.push(item); });
-          localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
-        }
+        await supabaseClient.from('transactions').insert(newEntries);
+        const { data } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
+        if (data) transactions = data;
       }
     }
 
@@ -713,7 +696,6 @@
       render();
     }
 
-    // 가계부 저장 로직
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
@@ -758,33 +740,21 @@
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from('transactions').insert([newTx]);
-        saveBtn.innerText = '저장하기';
-        saveBtn.disabled = false;
-        
-        if (error) { 
-          alert('저장 실패: ' + error.message); 
-          return; 
-        }
-        
-        currentYear = dateParts.year;
-        currentMonth = dateParts.month;
-        updateMonthText();
-        
-        await loadTransactions();
-      } else {
-        newTx.id = Date.now();
-        transactions.unshift(newTx);
-        localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
-        saveBtn.innerText = '저장하기';
-        saveBtn.disabled = false;
-        
-        currentYear = dateParts.year;
-        currentMonth = dateParts.month;
-        updateMonthText();
-        render();
+      const { error } = await supabaseClient.from('transactions').insert([newTx]);
+      saveBtn.innerText = '저장하기';
+      saveBtn.disabled = false;
+      
+      if (error) { 
+        showError('저장 실패: ' + error.message);
+        alert('저장 실패: ' + error.message); 
+        return; 
       }
+      
+      currentYear = dateParts.year;
+      currentMonth = dateParts.month;
+      updateMonthText();
+      
+      await loadTransactions();
 
       closeModal();
       document.getElementById('txTitle').value = '';
@@ -795,19 +765,12 @@
 
     async function deleteTransaction(id) {
       if (!confirm('내역을 삭제하시겠습니까?')) return;
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
-        if (error) alert('삭제 실패: ' + error.message);
-        await loadTransactions();
-      } else {
-        transactions = transactions.filter(t => t.id !== id);
-        localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
-        render();
-      }
+      const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
+      if (error) alert('삭제 실패: ' + error.message);
+      await loadTransactions();
       if (currentMainView === 'stats') renderStats();
     }
 
-    // 화면 렌더링
     function render() {
       const monthlyData = transactions.filter(t => {
         const p = parseDate(t.date);
