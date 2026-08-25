@@ -7,7 +7,6 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>우리가계부</title>
-  <!-- Chart.js, SortableJS, Supabase 로드 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -88,8 +87,6 @@
     .form-group { margin-bottom: 12px; }
     .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
     .form-input, select { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
-    
-    /* 한국식 날짜 선택기 전용 스타일 */
     .date-picker-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; }
 
     .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
@@ -196,9 +193,9 @@
         <select id="txAuthor" class="form-input"></select>
       </div>
 
-      <!-- 한국식 3분할 날짜 선택기 -->
+      <!-- 날짜 선택기 -->
       <div class="form-group">
-        <label class="form-label">날짜 (한국식 선택)</label>
+        <label class="form-label">날짜</label>
         <div class="date-picker-row">
           <select id="txYear" class="form-input" onchange="updateDaysInMonth()"></select>
           <select id="txMonth" class="form-input" onchange="updateDaysInMonth()"></select>
@@ -292,11 +289,11 @@
   </div>
 
   <script>
-    const APP_VERSION = '4.0';
+    const APP_VERSION = '4.5';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
-
+    
     let supabaseClient = (SUPABASE_URL !== '여기에_SUPABASE_URL_입력') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
     let transactions = [];
     let doughnutChartInstance = null;
@@ -350,12 +347,15 @@
       document.getElementById('currentMonthText').innerText = `${currentYear}년 ${currentMonth}월`;
     }
 
-    // 한국식 날짜 선택기 초기화 (년, 월, 일 셀렉트)
     function initKoreanDatePicker() {
       const ySelect = document.getElementById('txYear');
       const mSelect = document.getElementById('txMonth');
       
-      ySelect.innerHTML = [currentYear - 1, currentYear, currentYear + 1].map(y => `<option value="${y}">${y}년</option>`).join('');
+      const yearList = [];
+      for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+        yearList.push(y);
+      }
+      ySelect.innerHTML = yearList.map(y => `<option value="${y}">${y}년</option>`).join('');
       ySelect.value = currentYear;
 
       mSelect.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}월</option>`).join('');
@@ -366,8 +366,8 @@
     }
 
     function updateDaysInMonth() {
-      const y = Number(document.getElementById('txYear').value);
-      const m = Number(document.getElementById('txMonth').value);
+      const y = Number(document.getElementById('txYear').value) || currentYear;
+      const m = Number(document.getElementById('txMonth').value) || currentMonth;
       const dSelect = document.getElementById('txDay');
       const lastDay = new Date(y, m, 0).getDate();
       
@@ -376,21 +376,36 @@
       dSelect.value = Math.min(currentVal, lastDay);
     }
 
-    function getSelectedDateString() {
-      const y = document.getElementById('txYear').value;
-      const m = String(document.getElementById('txMonth').value).padStart(2, '0');
-      const d = String(document.getElementById('txDay').value).padStart(2, '0');
-      return `${y}-${m}-${d}`;
+    function getSelectedDateParts() {
+      const y = Number(document.getElementById('txYear').value);
+      const m = Number(document.getElementById('txMonth').value);
+      const d = Number(document.getElementById('txDay').value);
+      const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return { year: y, month: m, day: d, dateStr: dateStr };
     }
 
-    function formatKoreanDate(dateStr) {
-      if (!dateStr) return '';
-      const clean = String(dateStr).split('T')[0];
+    // 날짜를 YYYY, MM, DD로 정밀 분해
+    function parseDate(dateVal) {
+      if (!dateVal) return null;
+      const clean = String(dateVal).split('T')[0].trim();
       const parts = clean.split('-');
       if (parts.length >= 3) {
-        return `${Number(parts[1])}월 ${Number(parts[2])}일`;
+        return {
+          year: Number(parts[0]),
+          month: Number(parts[1]),
+          day: Number(parts[2].slice(0, 2)),
+          fullStr: `${parts[0]}-${String(Number(parts[1])).padStart(2,'0')}-${String(Number(parts[2].slice(0,2))).padStart(2,'0')}`
+        };
       }
-      return dateStr;
+      return null;
+    }
+
+    function formatKoreanDate(dateVal) {
+      const p = parseDate(dateVal);
+      if (p) {
+        return `${p.month}월 ${p.day}일`;
+      }
+      return dateVal;
     }
 
     function switchMainView(view) {
@@ -593,6 +608,7 @@
 
     function openSettingsModal() { renderSettings(); document.getElementById('settingsModal').classList.add('open'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
+    
     function openModal() { 
       applyLastUsedFlowType();
       document.getElementById('txYear').value = currentYear;
@@ -602,7 +618,6 @@
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
-    // 데이터베이스 조회
     async function loadTransactions() {
       if (!supabaseClient) {
         transactions = JSON.parse(localStorage.getItem('my_ledger_local')) || [];
@@ -630,21 +645,22 @@
     }
 
     async function autoApplyRecurringExpenses() {
-      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const recurringTemplates = transactions.filter(t => t.is_recurring === true);
       const currentMonthData = transactions.filter(t => {
-        if (!t.date) return false;
-        const d = String(t.date).split('T')[0];
-        return d.startsWith(targetPrefix);
+        const p = parseDate(t.date);
+        return p && p.year === currentYear && p.month === currentMonth;
       });
 
       const newEntries = [];
       recurringTemplates.forEach(template => {
         const exists = currentMonthData.some(item => item.title === template.title && Number(item.amount) === Number(template.amount));
         if (!exists) {
-          const originalDay = String(template.date).split('-')[2] || '01';
+          const tp = parseDate(template.date);
+          const originalDay = tp ? tp.day : 1;
+          const targetDateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(originalDay).padStart(2, '0')}`;
+          
           newEntries.push({
-            date: `${targetPrefix}-${originalDay.slice(0,2)}`,
+            date: targetDateStr,
             flow_type: template.flow_type,
             type: template.flow_type,
             main_category: template.main_category,
@@ -692,7 +708,7 @@
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
-      const date = getSelectedDateString();
+      const dateParts = getSelectedDateParts();
       const mainCat = document.getElementById('txMainCategory').value;
       const subCat = document.getElementById('txSubCategory').value;
       const payment = document.getElementById('txPayment').value;
@@ -715,7 +731,7 @@
       localStorage.setItem('my_ledger_author', author);
 
       const newTx = { 
-        date: date,
+        date: dateParts.dateStr,
         type: selectedFlowType, 
         flow_type: selectedFlowType, 
         main_category: mainCat, 
@@ -740,6 +756,12 @@
           alert('저장 실패: ' + error.message); 
           return; 
         }
+        
+        // 입력한 날짜의 년/월로 상단 뷰 즉시 동기화
+        currentYear = dateParts.year;
+        currentMonth = dateParts.month;
+        updateMonthText();
+        
         await loadTransactions();
       } else {
         newTx.id = Date.now();
@@ -747,6 +769,10 @@
         localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
         saveBtn.innerText = '저장하기';
         saveBtn.disabled = false;
+        
+        currentYear = dateParts.year;
+        currentMonth = dateParts.month;
+        updateMonthText();
         render();
       }
 
@@ -772,12 +798,9 @@
 
     // 메인 리스트 및 상단 카드 렌더링
     function render() {
-      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      
       const monthlyData = transactions.filter(t => {
-        if (!t.date) return false;
-        const d = String(t.date).split('T')[0];
-        return d.startsWith(targetPrefix);
+        const p = parseDate(t.date);
+        return p && p.year === currentYear && p.month === currentMonth;
       });
 
       let inc = 0, exp = 0, fix = 0, sav = 0;
@@ -855,11 +878,9 @@
     ];
 
     function renderStats() {
-      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const monthlyExpenses = transactions.filter(t => {
-        if (!t.date) return false;
-        const d = String(t.date).split('T')[0];
-        const isThisMonth = d.startsWith(targetPrefix);
+        const p = parseDate(t.date);
+        const isThisMonth = p && p.year === currentYear && p.month === currentMonth;
         const flow = t.flow_type || t.type;
         const isExpense = (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
         return isThisMonth && isExpense;
