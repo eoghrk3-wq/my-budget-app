@@ -7,7 +7,6 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>우리가계부</title>
-  <!-- Chart.js, SortableJS, Supabase 로드 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -278,7 +277,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '8.0';
+    const APP_VERSION = '10.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -287,6 +286,7 @@
 
     let transactions = [];
     let doughnutChartInstance = null;
+    let isFetching = false;
 
     const defaultCategories = {
       "수입": {
@@ -304,7 +304,18 @@
       }
     };
 
-    let categoryStructure = JSON.parse(localStorage.getItem('my_category_tree')) || defaultCategories;
+    let categoryStructure = defaultCategories;
+    try {
+      const storedCat = JSON.parse(localStorage.getItem('my_category_tree'));
+      if (storedCat && storedCat['지출'] && typeof storedCat['지출'] === 'object' && !Array.isArray(storedCat['지출'])) {
+        categoryStructure = storedCat;
+      } else {
+        localStorage.setItem('my_category_tree', JSON.stringify(defaultCategories));
+      }
+    } catch(e) {
+      categoryStructure = defaultCategories;
+    }
+
     let payments = JSON.parse(localStorage.getItem('my_ledger_payments')) || [
       'J 삼성카드', 'J 국민카드', 'D 신한카드', '신한은행(J)', '신한은행(D)', '우리은행(J)', '토스뱅크', '현금/이체'
     ];
@@ -341,10 +352,10 @@
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('txDate').value = `${yyyy}-${mm}-${dd}`;
+      const dateElem = document.getElementById('txDate');
+      if (dateElem) dateElem.value = `${yyyy}-${mm}-${dd}`;
     }
 
-    // 목록에 표시할 때 무조건 '8월 25일' 한국식으로 깔끔하게 변환
     function formatKoreanDate(dateVal) {
       if (!dateVal) return '';
       const clean = String(dateVal).split('T')[0];
@@ -373,14 +384,18 @@
 
     function renderDropdowns() {
       const authSelect = document.getElementById('txAuthor');
-      authSelect.innerHTML = authors.map(a => `<option value="${a}">${a}</option>`).join('');
-      const localAuthor = localStorage.getItem('my_ledger_author');
-      if (localAuthor) authSelect.value = localAuthor;
+      if (authSelect) {
+        authSelect.innerHTML = authors.map(a => `<option value="${a}">${a}</option>`).join('');
+        const localAuthor = localStorage.getItem('my_ledger_author');
+        if (localAuthor) authSelect.value = localAuthor;
+      }
 
       const paySelect = document.getElementById('txPayment');
-      paySelect.innerHTML = payments.map(p => `<option value="${p}">${p}</option>`).join('');
-      if (lastUsedState.payment && payments.includes(lastUsedState.payment)) {
-        paySelect.value = lastUsedState.payment;
+      if (paySelect) {
+        paySelect.innerHTML = payments.map(p => `<option value="${p}">${p}</option>`).join('');
+        if (lastUsedState.payment && payments.includes(lastUsedState.payment)) {
+          paySelect.value = lastUsedState.payment;
+        }
       }
 
       applyLastUsedFlowType();
@@ -395,7 +410,9 @@
 
     function renderMainCategories() {
       const mainSelect = document.getElementById('txMainCategory');
-      const mains = Object.keys(categoryStructure[selectedFlowType] || {});
+      if (!mainSelect) return;
+      const flowData = categoryStructure[selectedFlowType] || {};
+      const mains = Object.keys(flowData);
       mainSelect.innerHTML = mains.map(m => `<option value="${m}">${m}</option>`).join('');
       
       if (lastUsedState.main && mains.includes(lastUsedState.main) && lastUsedState.flow === selectedFlowType) {
@@ -405,9 +422,13 @@
     }
 
     function handleMainCategoryChange() {
-      const mainCat = document.getElementById('txMainCategory').value;
+      const mainSelect = document.getElementById('txMainCategory');
       const subSelect = document.getElementById('txSubCategory');
-      const subs = (categoryStructure[selectedFlowType] && categoryStructure[selectedFlowType][mainCat]) || [];
+      if (!mainSelect || !subSelect) return;
+
+      const mainCat = mainSelect.value;
+      const flowData = categoryStructure[selectedFlowType] || {};
+      const subs = flowData[mainCat] || [];
       subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
 
       if (lastUsedState.sub && subs.includes(lastUsedState.sub) && lastUsedState.main === mainCat) {
@@ -443,7 +464,7 @@
             <span>↳ ${main}</span>
             <button class="chip-remove" onclick="removeMainCategory('${flow}', '${main}')">대분류 삭제</button>
           </div><div class="chip-container sub-chip-container" data-flow="${flow}" data-main="${main}">`;
-          categoryStructure[flow][main].forEach(sub => {
+          (categoryStructure[flow][main] || []).forEach(sub => {
             treeHtml += `<div class="chip" data-id="${sub}"><span class="chip-handle">⠿</span><span>${sub}</span><button class="chip-remove" onclick="removeSubCategory('${flow}', '${main}', '${sub}')">×</button></div>`;
           });
           treeHtml += `</div>`;
@@ -562,23 +583,32 @@
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
-    // 데이터베이스 조회
+    // Race Condition 방어형 데이터 로드
     async function loadTransactions() {
+      if (isFetching) return;
+      isFetching = true;
+
       try {
         const { data, error } = await supabaseClient
           .from('transactions')
           .select('*')
           .order('date', { ascending: false });
         
-        if (error) {
-          console.error('DB 조회 에러:', error);
-        } else if (data) {
+        if (!error && Array.isArray(data)) {
           transactions = data;
         }
       } catch (err) {
-        console.error('데이터 로드 실패:', err);
+        console.warn('DB 로드 에러:', err);
+      } finally {
+        isFetching = false;
       }
-      await autoApplyRecurringExpenses();
+      
+      try {
+        await autoApplyRecurringExpenses();
+      } catch (err) {
+        console.warn('반복 건너뜀:', err);
+      }
+
       render();
     }
 
@@ -630,8 +660,7 @@
       if (currentMonth > 12) { currentMonth = 1; currentYear++; }
       if (currentMonth < 1) { currentMonth = 12; currentYear--; }
       updateMonthText();
-      await autoApplyRecurringExpenses();
-      render();
+      await loadTransactions();
       if (currentMainView === 'stats') renderStats();
     }
 
@@ -642,7 +671,7 @@
       render();
     }
 
-    // 가계부 저장 로직
+    // 가계부 저장 (완전 동기화)
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
@@ -687,34 +716,27 @@
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
-      try {
-        const { error } = await supabaseClient.from('transactions').insert([newTx]);
-        saveBtn.innerText = '저장하기';
-        saveBtn.disabled = false;
-        
-        if (error) { 
-          alert('저장 실패: ' + error.message); 
-          return; 
-        }
-
-        // 입력한 날짜의 월로 즉시 상단 뷰 이동
-        const dateParts = date.split('-');
-        currentYear = Number(dateParts[0]);
-        currentMonth = Number(dateParts[1]);
-        updateMonthText();
-        
-        await loadTransactions();
-      } catch (err) {
-        saveBtn.innerText = '저장하기';
-        saveBtn.disabled = false;
-        alert('저장 오류: ' + err.message);
-        return;
+      const { data, error } = await supabaseClient.from('transactions').insert([newTx]).select();
+      saveBtn.innerText = '저장하기';
+      saveBtn.disabled = false;
+      
+      if (error) { 
+        alert('저장 실패: ' + error.message); 
+        return; 
       }
 
+      const dateParts = date.split('-');
+      currentYear = Number(dateParts[0]);
+      currentMonth = Number(dateParts[1]);
+      updateMonthText();
+      
       closeModal();
       document.getElementById('txTitle').value = '';
       document.getElementById('txAmount').value = '';
       document.getElementById('txMemo').value = '';
+
+      // 순차적으로 정확히 서버 데이터 재조회 및 렌더링
+      await loadTransactions();
       if (currentMainView === 'stats') renderStats();
     }
 
