@@ -13,6 +13,7 @@
   <style>
     :root {
       --primary: #4F46E5;
+      --primary-light: #EEF2FF;
       --income: #10B981;
       --expense: #EF4444;
       --fixed: #F59E0B;
@@ -88,6 +89,15 @@
     .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
     .form-input, select { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
 
+    /* 한국식 커스텀 날짜 선택기 버튼 & 패널 */
+    .custom-date-btn { width: 100%; padding: 11px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.92rem; font-weight: 600; text-align: left; background: #FFFFFF; color: var(--text); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .date-panel { display: none; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-top: 6px; }
+    .date-panel.open { display: block; }
+    .date-picker-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+    .date-quick-btns { display: flex; gap: 6px; }
+    .btn-quick { flex: 1; padding: 6px; font-size: 0.75rem; border-radius: 6px; border: 1px solid #D1D5DB; background: white; cursor: pointer; font-weight: 600; color: var(--subtext); }
+    .btn-quick:active { background: var(--primary-light); color: var(--primary); }
+
     .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
     .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; }
     .btn-close { width: 100%; background: #F3F4F6; color: var(--subtext); border: none; padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
@@ -97,13 +107,15 @@
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
+    /* 드래그 및 삭제 칩 UI */
     .tree-box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
     .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; min-height: 32px; }
-    .chip { display: flex; align-items: center; gap: 4px; background: #FFFFFF; border: 1px solid #D1D5DB; padding: 5px 9px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; cursor: grab; user-select: none; touch-action: none; }
-    .chip:active { cursor: grabbing; opacity: 0.8; }
-    .chip-handle { color: #9CA3AF; margin-right: 2px; font-size: 0.8rem; }
-    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.85rem; padding-left: 2px; }
+    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; min-height: 36px; padding: 4px 0; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #D1D5DB; padding: 6px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; user-select: none; touch-action: none; }
+    .chip-handle { color: #9CA3AF; cursor: grab; font-size: 0.9rem; }
+    .chip-handle:active { cursor: grabbing; }
+    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.95rem; padding-left: 2px; }
+    .btn-del-main { background: none; border: none; color: #EF4444; font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px; }
     .add-row { display: flex; gap: 6px; margin-top: 6px; }
     .btn-add { background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
   </style>
@@ -186,9 +198,25 @@
         <select id="txAuthor" class="form-input"></select>
       </div>
 
+      <!-- 한국식 맞춤 날짜 선택기 -->
       <div class="form-group">
         <label class="form-label">날짜</label>
-        <input type="date" id="txDate" class="form-input" />
+        <button type="button" class="custom-date-btn" onclick="toggleDatePanel()">
+          <span id="selectedDateDisplay">2026년 8월 25일 (화)</span>
+          <span>📅</span>
+        </button>
+        <div class="date-panel" id="datePanel">
+          <div class="date-picker-row">
+            <select id="selYear" class="form-input" onchange="onDateWheelChange()"></select>
+            <select id="selMonth" class="form-input" onchange="onDateWheelChange()"></select>
+            <select id="selDay" class="form-input" onchange="onDateWheelChange()"></select>
+          </div>
+          <div class="date-quick-btns">
+            <button type="button" class="btn-quick" onclick="setQuickDate(0)">오늘</button>
+            <button type="button" class="btn-quick" onclick="setQuickDate(-1)">어제</button>
+            <button type="button" class="btn-quick" onclick="setQuickDate(-2)">그저께</button>
+          </div>
+        </div>
       </div>
 
       <div class="category-grid">
@@ -236,7 +264,7 @@
   <div class="modal" id="settingsModal">
     <div class="modal-content">
       <div class="modal-title">⚙️ 분류 및 결제수단 설정</div>
-      <div style="font-size:0.75rem; color:var(--subtext); margin-bottom:12px;">💡 칩을 길게 눌러 끌어당기면 순서를 변경할 수 있습니다.</div>
+      <div style="font-size:0.75rem; color:var(--subtext); margin-bottom:12px;">💡 항목의 <b>⠿</b> 아이콘을 끌어서 순서를 변경하고, <b>×</b>를 눌러 삭제할 수 있습니다.</div>
 
       <div class="tree-box">
         <div class="tree-header">➕ 새 대분류 추가</div>
@@ -260,12 +288,12 @@
         </div>
       </div>
 
-      <div class="form-label" style="margin-top:14px;">현재 등록된 분류 목록 (드래그하여 정렬)</div>
+      <div class="form-label" style="margin-top:14px;">현재 분류 목록 (드래그 정렬 / 삭제)</div>
       <div id="categoryTreeDisplay"></div>
 
       <hr style="border:none; border-top:1px solid #E5E7EB; margin:16px 0;" />
 
-      <div class="form-label">결제수단 / 계좌 관리 (드래그하여 정렬)</div>
+      <div class="form-label">결제수단 / 계좌 관리 (드래그 정렬 / 삭제)</div>
       <div class="add-row">
         <input type="text" id="newPaymentInput" class="form-input" placeholder="새 결제수단 (예: 토스뱅크)" />
         <button class="btn-add" onclick="addPayment()">추가</button>
@@ -277,7 +305,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '10.0';
+    const APP_VERSION = '11.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -325,6 +353,13 @@
     let currentYear = today.getFullYear();
     let currentMonth = today.getMonth() + 1;
     
+    // 현재 입력 선택 날짜 상태
+    let selectedTxDate = {
+      year: today.getFullYear(),
+      month: today.getMonth() + 1,
+      day: today.getDate()
+    };
+
     let lastUsedState = JSON.parse(localStorage.getItem('my_last_used_state')) || {
       flow: '지출',
       main: '소비',
@@ -338,8 +373,8 @@
 
     async function init() {
       updateMonthText();
+      initDateWheel();
       renderDropdowns();
-      setDefaultDate();
       await loadTransactions();
       listenRealtime();
     }
@@ -348,12 +383,69 @@
       document.getElementById('currentMonthText').innerText = `${currentYear}년 ${currentMonth}월`;
     }
 
-    function setDefaultDate() {
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const dateElem = document.getElementById('txDate');
-      if (dateElem) dateElem.value = `${yyyy}-${mm}-${dd}`;
+    // --- 한국식 날짜 선택기 로직 ---
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+    function initDateWheel() {
+      const ySel = document.getElementById('selYear');
+      const mSel = document.getElementById('selMonth');
+      
+      const years = [];
+      for (let y = currentYear - 3; y <= currentYear + 2; y++) years.push(y);
+      ySel.innerHTML = years.map(y => `<option value="${y}">${y}년</option>`).join('');
+      mSel.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}월</option>`).join('');
+
+      setDateWheelValues(selectedTxDate.year, selectedTxDate.month, selectedTxDate.day);
+    }
+
+    function updateDaySelectOptions(y, m, selectedD) {
+      const dSel = document.getElementById('selDay');
+      const lastDay = new Date(y, m, 0).getDate();
+      dSel.innerHTML = Array.from({length: lastDay}, (_, i) => `<option value="${i+1}">${i+1}일</option>`).join('');
+      dSel.value = Math.min(selectedD || 1, lastDay);
+    }
+
+    function setDateWheelValues(y, m, d) {
+      document.getElementById('selYear').value = y;
+      document.getElementById('selMonth').value = m;
+      updateDaySelectOptions(y, m, d);
+      selectedTxDate = { year: Number(y), month: Number(m), day: Number(document.getElementById('selDay').value) };
+      updateDateDisplay();
+    }
+
+    function onDateWheelChange() {
+      const y = Number(document.getElementById('selYear').value);
+      const m = Number(document.getElementById('selMonth').value);
+      const d = Number(document.getElementById('selDay').value);
+      updateDaySelectOptions(y, m, d);
+      selectedTxDate = { year: y, month: m, day: Number(document.getElementById('selDay').value) };
+      updateDateDisplay();
+    }
+
+    function updateDateDisplay() {
+      const dt = new Date(selectedTxDate.year, selectedTxDate.month - 1, selectedTxDate.day);
+      const dayOfWeek = dayNames[dt.getDay()];
+      document.getElementById('selectedDateDisplay').innerText = 
+        `${selectedTxDate.year}년 ${selectedTxDate.month}월 ${selectedTxDate.day}일 (${dayOfWeek})`;
+    }
+
+    function toggleDatePanel() {
+      const panel = document.getElementById('datePanel');
+      panel.classList.toggle('open');
+    }
+
+    function setQuickDate(offsetDays) {
+      const target = new Date();
+      target.setDate(target.getDate() + offsetDays);
+      setDateWheelValues(target.getFullYear(), target.getMonth() + 1, target.getDate());
+      document.getElementById('datePanel').classList.remove('open');
+    }
+
+    function getSelectedDateString() {
+      const y = selectedTxDate.year;
+      const m = String(selectedTxDate.month).padStart(2, '0');
+      const d = String(selectedTxDate.day).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
 
     function formatKoreanDate(dateVal) {
@@ -446,6 +538,7 @@
       document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
     }
 
+    // --- 설정 모달 & 드래그 앤 드롭 & 삭제 UI ---
     function renderSettings() {
       const targetMainSelect = document.getElementById('targetMainCatSelect');
       let options = [];
@@ -460,9 +553,9 @@
       Object.keys(categoryStructure).forEach(flow => {
         treeHtml += `<div class="tree-box"><div class="tree-header" style="color:var(--primary);">📁 [${flow}]</div>`;
         Object.keys(categoryStructure[flow]).forEach(main => {
-          treeHtml += `<div style="margin: 6px 0 2px; font-size:0.8rem; font-weight:700; display:flex; justify-content:space-between;">
+          treeHtml += `<div style="margin: 8px 0 3px; font-size:0.82rem; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
             <span>↳ ${main}</span>
-            <button class="chip-remove" onclick="removeMainCategory('${flow}', '${main}')">대분류 삭제</button>
+            <button class="btn-del-main" onclick="removeMainCategory('${flow}', '${main}')">대분류 삭제</button>
           </div><div class="chip-container sub-chip-container" data-flow="${flow}" data-main="${main}">`;
           (categoryStructure[flow][main] || []).forEach(sub => {
             treeHtml += `<div class="chip" data-id="${sub}"><span class="chip-handle">⠿</span><span>${sub}</span><button class="chip-remove" onclick="removeSubCategory('${flow}', '${main}', '${sub}')">×</button></div>`;
@@ -579,11 +672,13 @@
     
     function openModal() { 
       applyLastUsedFlowType();
+      setDateWheelValues(currentYear, currentMonth, today.getDate());
+      document.getElementById('datePanel').classList.remove('open');
       document.getElementById('inputModal').classList.add('open'); 
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
-    // Race Condition 방어형 데이터 로드
+    // --- DB 연동 및 렌더링 ---
     async function loadTransactions() {
       if (isFetching) return;
       isFetching = true;
@@ -671,11 +766,10 @@
       render();
     }
 
-    // 가계부 저장 (완전 동기화)
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
-      const date = document.getElementById('txDate').value;
+      const date = getSelectedDateString();
       const mainCat = document.getElementById('txMainCategory').value;
       const subCat = document.getElementById('txSubCategory').value;
       const payment = document.getElementById('txPayment').value;
@@ -684,7 +778,7 @@
       const is_recurring = document.getElementById('txIsRecurring').checked;
 
       if (!title || !amount || !date) {
-        alert('내용, 금액, 날짜를 모두 입력해주세요.');
+        alert('내용과 금액을 입력해주세요.');
         return;
       }
 
@@ -725,9 +819,8 @@
         return; 
       }
 
-      const dateParts = date.split('-');
-      currentYear = Number(dateParts[0]);
-      currentMonth = Number(dateParts[1]);
+      currentYear = selectedTxDate.year;
+      currentMonth = selectedTxDate.month;
       updateMonthText();
       
       closeModal();
@@ -735,7 +828,6 @@
       document.getElementById('txAmount').value = '';
       document.getElementById('txMemo').value = '';
 
-      // 순차적으로 정확히 서버 데이터 재조회 및 렌더링
       await loadTransactions();
       if (currentMainView === 'stats') renderStats();
     }
@@ -748,7 +840,6 @@
       if (currentMainView === 'stats') renderStats();
     }
 
-    // 화면 렌더링
     function render() {
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       
