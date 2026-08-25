@@ -97,7 +97,6 @@
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    /* 드래그 앤 드롭 칩 스타일 */
     .tree-box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
     .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
     .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; min-height: 32px; }
@@ -284,11 +283,11 @@
   </div>
 
   <script>
-    const APP_VERSION = '3.0';
+    const APP_VERSION = '3.5';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
-    
+
     let supabaseClient = (SUPABASE_URL !== '여기에_SUPABASE_URL_입력') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
     let transactions = [];
     let doughnutChartInstance = null;
@@ -309,12 +308,6 @@
       }
     };
 
-    const savedVersion = localStorage.getItem('my_app_version');
-    if (savedVersion !== APP_VERSION) {
-      localStorage.setItem('my_category_tree', JSON.stringify(defaultCategories));
-      localStorage.setItem('my_app_version', APP_VERSION);
-    }
-
     let categoryStructure = JSON.parse(localStorage.getItem('my_category_tree')) || defaultCategories;
     let payments = JSON.parse(localStorage.getItem('my_ledger_payments')) || [
       'J 삼성카드', 'J 국민카드', 'D 신한카드', '신한은행(J)', '신한은행(D)', '우리은행(J)', '토스뱅크', '현금/이체'
@@ -325,7 +318,6 @@
     let currentYear = today.getFullYear();
     let currentMonth = today.getMonth() + 1;
     
-    // 마지막 입력 상태 복원 (스마트 기본값)
     let lastUsedState = JSON.parse(localStorage.getItem('my_last_used_state')) || {
       flow: '지출',
       main: '소비',
@@ -347,18 +339,18 @@
       document.getElementById('txDate').value = `${yyyy}-${mm}-${dd}`;
 
       await loadTransactions();
+      listenRealtime();
     }
 
     function updateMonthText() {
       document.getElementById('currentMonthText').innerText = `${currentYear}년 ${currentMonth}월`;
     }
 
-    // 한국식 날짜 포맷터 (YYYY-MM-DD -> M월 D일)
     function formatKoreanDate(dateStr) {
       if (!dateStr) return '';
-      const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        return `${Number(parts[1])}월 ${Number(parts[2])}일`;
+      const parts = String(dateStr).split('-');
+      if (parts.length >= 3) {
+        return `${Number(parts[1])}월 ${Number(parts[2].slice(0,2))}일`;
       }
       return dateStr;
     }
@@ -433,7 +425,6 @@
       document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
     }
 
-    // 설정 화면 및 SortableJS 드래그 앤 드롭 활성화
     function renderSettings() {
       const targetMainSelect = document.getElementById('targetMainCatSelect');
       let options = [];
@@ -470,7 +461,6 @@
     }
 
     function initDragAndDrop() {
-      // 결제수단 드래그 앤 드롭
       const payContainer = document.getElementById('paymentChips');
       if (payContainer) {
         new Sortable(payContainer, {
@@ -485,7 +475,6 @@
         });
       }
 
-      // 중분류 카테고리 드래그 앤 드롭
       document.querySelectorAll('.sub-chip-container').forEach(container => {
         new Sortable(container, {
           animation: 150,
@@ -572,30 +561,46 @@
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
 
+    // 데이터베이스 조회
     async function loadTransactions() {
       if (!supabaseClient) {
         transactions = JSON.parse(localStorage.getItem('my_ledger_local')) || [];
       } else {
-        const { data, error } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
+        const { data, error } = await supabaseClient
+          .from('transactions')
+          .select('*')
+          .order('date', { ascending: false });
         if (!error && data) transactions = data;
       }
       await autoApplyRecurringExpenses();
       render();
     }
 
+    // 부부 실시간 동기화
+    function listenRealtime() {
+      if (!supabaseClient) return;
+      supabaseClient
+        .channel('public:transactions')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+          loadTransactions();
+        })
+        .subscribe();
+    }
+
     async function autoApplyRecurringExpenses() {
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const recurringTemplates = transactions.filter(t => t.is_recurring === true);
-      const currentMonthData = transactions.filter(t => t.date && t.date.startsWith(targetPrefix));
+      const currentMonthData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
 
       const newEntries = [];
       recurringTemplates.forEach(template => {
         const exists = currentMonthData.some(item => item.title === template.title && Number(item.amount) === Number(template.amount));
         if (!exists) {
-          const originalDay = template.date.split('-')[2] || '01';
+          const originalDay = String(template.date).split('-')[2] || '01';
           newEntries.push({
-            date: `${targetPrefix}-${originalDay}`,
+            date: `${targetPrefix}-${originalDay.slice(0,2)}`,
             flow_type: template.flow_type,
+            type: template.flow_type,
             main_category: template.main_category,
             sub_category: template.sub_category,
             title: template.title,
@@ -637,6 +642,7 @@
       render();
     }
 
+    // 거래 내역 저장
     async function saveTransaction() {
       const title = document.getElementById('txTitle').value.trim();
       const amount = Number(document.getElementById('txAmount').value);
@@ -653,7 +659,6 @@
         return;
       }
 
-      // 마지막 입력 상태 저장
       lastUsedState = {
         flow: selectedFlowType,
         main: mainCat,
@@ -664,7 +669,8 @@
       localStorage.setItem('my_ledger_author', author);
 
       const newTx = { 
-        date, 
+        date: date,
+        type: selectedFlowType, 
         flow_type: selectedFlowType, 
         main_category: mainCat, 
         sub_category: subCat, 
@@ -676,19 +682,25 @@
         is_recurring 
       };
 
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.innerText = '저장 중...';
+      saveBtn.disabled = true;
+
       if (supabaseClient) {
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.innerText = '저장 중...';
-        saveBtn.disabled = true;
         const { error } = await supabaseClient.from('transactions').insert([newTx]);
         saveBtn.innerText = '저장하기';
         saveBtn.disabled = false;
-        if (error) { alert('저장 실패: ' + error.message); return; }
+        if (error) { 
+          alert('저장 실패: ' + error.message); 
+          return; 
+        }
         await loadTransactions();
       } else {
         newTx.id = Date.now();
         transactions.push(newTx);
         localStorage.setItem('my_ledger_local', JSON.stringify(transactions));
+        saveBtn.innerText = '저장하기';
+        saveBtn.disabled = false;
         render();
       }
 
@@ -712,9 +724,13 @@
       if (currentMainView === 'stats') renderStats();
     }
 
+    // 메인 리스트 및 요약 렌더링
     function render() {
       const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      const monthlyData = transactions.filter(t => t.date && t.date.startsWith(prefix));
+      const monthlyData = transactions.filter(t => {
+        if (!t.date) return false;
+        return String(t.date).startsWith(prefix);
+      });
 
       let inc = 0, exp = 0, fix = 0, sav = 0;
       monthlyData.forEach(t => {
@@ -793,7 +809,7 @@
     function renderStats() {
       const prefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       const monthlyExpenses = transactions.filter(t => {
-        const isThisMonth = t.date && t.date.startsWith(prefix);
+        const isThisMonth = t.date && String(t.date).startsWith(prefix);
         const flow = t.flow_type || t.type;
         const isExpense = (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
         return isThisMonth && isExpense;
