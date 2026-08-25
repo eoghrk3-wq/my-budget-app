@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>우리가계부</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -74,7 +77,6 @@
 
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    /* 설정 모달 */
     .tree-box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
     .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
     .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
@@ -124,7 +126,6 @@
     <div class="modal-content">
       <div class="modal-title">가계부 등록</div>
       
-      <!-- 1단계: 대유형 선택 -->
       <div class="type-selector">
         <button type="button" class="type-btn selected" onclick="selectFlowType('지출', event)">지출</button>
         <button type="button" class="type-btn" onclick="selectFlowType('수입', event)">수입</button>
@@ -141,7 +142,6 @@
         <input type="date" id="txDate" class="form-input" />
       </div>
 
-      <!-- 2 & 3단계: 대분류 & 중분류 동적 연동 -->
       <div class="category-grid">
         <div class="form-group">
           <label class="form-label">대분류</label>
@@ -183,12 +183,11 @@
     </div>
   </div>
 
-  <!-- 분류 및 계좌 설정 모달 -->
+  <!-- 설정 모달 -->
   <div class="modal" id="settingsModal">
     <div class="modal-content">
       <div class="modal-title">⚙️ 분류 및 결제수단 설정</div>
 
-      <!-- 대분류 추가 -->
       <div class="tree-box">
         <div class="tree-header">➕ 새 대분류 추가</div>
         <div class="add-row">
@@ -202,7 +201,6 @@
         </div>
       </div>
 
-      <!-- 중분류 추가 -->
       <div class="tree-box">
         <div class="tree-header">➕ 새 중분류 추가</div>
         <div class="add-row">
@@ -212,13 +210,11 @@
         </div>
       </div>
 
-      <!-- 현재 분류 트리 목록 -->
       <div class="form-label" style="margin-top:14px;">현재 등록된 분류 목록</div>
       <div id="categoryTreeDisplay"></div>
 
       <hr style="border:none; border-top:1px solid #E5E7EB; margin:16px 0;" />
 
-      <!-- 결제수단 관리 -->
       <div class="form-label">결제수단 / 계좌 관리</div>
       <div class="add-row">
         <input type="text" id="newPaymentInput" class="form-input" placeholder="새 결제수단 (예: 토스뱅크)" />
@@ -230,14 +226,16 @@
     </div>
   </div>
 
- <script>
+  <script>
+    // 💡 버전 관리 번호 (업데이트 시 자동으로 구조를 병합)
+    const APP_VERSION = '2.0';
+
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_MhKVj7Oi34fJjfWgY_95mg_aCWP2OGc';
 
     let supabaseClient = (SUPABASE_URL !== '여기에_SUPABASE_URL_입력') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
     let transactions = [];
 
-    // 손글씨 계층 구조 데이터 초기화
     const defaultCategories = {
       "수입": {
         "급여": ["남편", "아내"],
@@ -253,6 +251,13 @@
         "소비": ["식비", "생활(육아)", "교통", "건강", "여가", "경조사", "기타"]
       }
     };
+
+    // 버전 체크 및 자동 구조 동기화
+    const savedVersion = localStorage.getItem('my_app_version');
+    if (savedVersion !== APP_VERSION) {
+      localStorage.setItem('my_category_tree', JSON.stringify(defaultCategories));
+      localStorage.setItem('my_app_version', APP_VERSION);
+    }
 
     let categoryStructure = JSON.parse(localStorage.getItem('my_category_tree')) || defaultCategories;
     let payments = JSON.parse(localStorage.getItem('my_ledger_payments')) || [
@@ -282,7 +287,6 @@
       document.getElementById('currentMonthText').innerText = `${currentYear}.${String(currentMonth).padStart(2, '0')}`;
     }
 
-    // 모달창 내 드롭다운 동적 렌더링
     function renderDropdowns() {
       const authSelect = document.getElementById('txAuthor');
       authSelect.innerHTML = authors.map(a => `<option value="${a}">${a}</option>`).join('');
@@ -315,14 +319,11 @@
       e.target.classList.add('selected');
       renderMainCategories();
       
-      // 고정비/적금인 경우 반복 체크 기본값
       const mainCat = document.getElementById('txMainCategory').value;
       document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
     }
 
-    // 설정 화면 렌더링
     function renderSettings() {
-      // 대분류 선택 드롭다운 채우기
       const targetMainSelect = document.getElementById('targetMainCatSelect');
       let options = [];
       Object.keys(categoryStructure).forEach(flow => {
@@ -332,7 +333,6 @@
       });
       targetMainSelect.innerHTML = options.join('');
 
-      // 트리 구조 표시
       let treeHtml = '';
       Object.keys(categoryStructure).forEach(flow => {
         treeHtml += `<div class="tree-box"><div class="tree-header" style="color:var(--primary);">📁 [${flow}]</div>`;
@@ -350,7 +350,6 @@
       });
       document.getElementById('categoryTreeDisplay').innerHTML = treeHtml;
 
-      // 결제수단 칩 표시
       document.getElementById('paymentChips').innerHTML = payments.map((p, i) => `
         <div class="chip"><span>${p}</span><button class="chip-remove" onclick="removePayment(${i})">×</button></div>
       `).join('');
