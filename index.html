@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>2gether - 둘이 함께 쓰는 가계부</title>
+  <title>2gether - 둘이 함께 쓰는 스마트 가계부</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,35 +15,56 @@
       --primary: #4F46E5;
       --primary-hover: #4338CA;
       --primary-light: #EEF2FF;
+      --primary-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
       --income: #10B981;
       --expense: #EF4444;
       --fixed: #F59E0B;
       --saving: #3B82F6;
-      --bg: #F3F4F6;
+      --bg: #F8FAFC;
       --card: #FFFFFF;
-      --text: #1F2937;
-      --subtext: #6B7280;
+      --text: #0F172A;
+      --subtext: #64748B;
+      --border: #E2E8F0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, "Malgun Gothic", sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
-    
-    .auth-container { max-width: 420px; margin: 60px auto; padding: 24px 20px; background: var(--card); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); text-align: center; }
-    .brand-logo { font-size: 2.2rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 4px; }
-    .brand-sub { font-size: 0.85rem; color: var(--subtext); margin-bottom: 24px; }
-    .auth-input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; text-align: left; }
-    .auth-input { width: 100%; padding: 12px 14px; border: 1px solid #D1D5DB; border-radius: 10px; font-size: 0.95rem; outline: none; }
-    .auth-btn-main { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; }
-    .auth-toggle { margin-top: 14px; font-size: 0.82rem; color: var(--subtext); cursor: pointer; text-decoration: underline; }
-    
-    .onboard-box { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-    .card-choice { border: 2px solid #E5E7EB; border-radius: 14px; padding: 16px; cursor: pointer; text-align: left; transition: all 0.2s; }
-    .card-choice:hover, .card-choice.selected { border-color: var(--primary); background: var(--primary-light); }
-    .card-choice h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .card-choice p { font-size: 0.78rem; color: var(--subtext); line-height: 1.4; }
 
-    #appView { display: none; }
+    /* 프리미엄 온보딩 & 인증 스타일 */
+    .auth-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px 16px; }
+    .auth-card { width: 100%; max-width: 400px; background: var(--card); border-radius: 28px; padding: 36px 24px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8); }
     
-    /* 2단 분리 상단 헤더 & 월 선택 바 */
+    .brand-hero { text-align: center; margin-bottom: 28px; }
+    .brand-icon-box { width: 64px; height: 64px; background: var(--primary-gradient); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4); margin-bottom: 14px; }
+    .brand-title { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+    .brand-tagline { font-size: 0.88rem; color: var(--subtext); font-weight: 500; }
+
+    .auth-toggle-bar { display: flex; background: #F1F5F9; border-radius: 14px; padding: 4px; margin-bottom: 24px; }
+    .auth-toggle-btn { flex: 1; padding: 10px 0; border: none; background: transparent; font-size: 0.88rem; font-weight: 700; color: var(--subtext); border-radius: 11px; cursor: pointer; transition: all 0.2s ease; }
+    .auth-toggle-btn.active { background: white; color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+    .input-field-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .floating-input-box { position: relative; }
+    .app-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 14px; font-size: 0.95rem; font-weight: 500; outline: none; background: #F8FAFC; transition: all 0.2s; color: var(--text); }
+    .app-input:focus { border-color: var(--primary); background: #FFFFFF; box-shadow: 0 0 0 4px var(--primary-light); }
+    .app-input::placeholder { color: #94A3B8; font-weight: 400; }
+
+    .btn-gradient-primary { width: 100%; padding: 15px; background: var(--primary-gradient); color: white; border: none; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.35); transition: opacity 0.2s, transform 0.1s; }
+    .btn-gradient-primary:active { transform: scale(0.98); opacity: 0.95; }
+
+    /* 페어링 온보딩 카드 스타일 */
+    .pairing-card-grid { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+    .pair-choice-card { border: 2px solid var(--border); border-radius: 20px; padding: 20px 18px; cursor: pointer; text-align: left; transition: all 0.2s; background: white; display: flex; align-items: center; gap: 16px; }
+    .pair-choice-card:hover, .pair-choice-card.selected { border-color: var(--primary); background: var(--primary-light); }
+    .card-emoji-box { width: 48px; height: 48px; border-radius: 14px; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .pair-choice-card.selected .card-emoji-box { background: white; }
+    .card-text-box h3 { font-size: 0.98rem; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+    .card-text-box p { font-size: 0.78rem; color: var(--subtext); line-height: 1.35; }
+
+    .invite-share-box { background: var(--primary-light); border-radius: 18px; padding: 20px 16px; text-align: center; margin-top: 18px; }
+    .invite-code-pill { font-size: 1.6rem; font-weight: 900; letter-spacing: 4px; color: var(--primary); padding: 10px 16px; background: white; border-radius: 12px; display: inline-block; margin: 10px 0 14px; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.1); border: 1px dashed var(--primary); }
+
+    /* 메인 앱 스타일 */
+    #appView { display: none; }
     .header { background: var(--card); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F3F4F6; position: sticky; top: 0; z-index: 10; }
     .header-left { display: flex; align-items: center; gap: 8px; }
     .header h1 { font-size: 1.25rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
@@ -55,39 +76,39 @@
     .month-btn { background: #F3F4F6; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 0.9rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; font-weight: bold; }
     .month-btn:active { background: #E5E7EB; }
 
-    .summary-card { background: var(--card); margin: 14px 16px; padding: 16px; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .summary-card { background: var(--card); margin: 14px 16px; padding: 18px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #F1F5F9; }
     .balance-title { font-size: 0.75rem; color: var(--subtext); margin-bottom: 2px; }
-    .balance-amount { font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; }
-    .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid #F3F4F6; padding-top: 10px; }
+    .balance-amount { font-size: 1.6rem; font-weight: 800; margin-bottom: 14px; }
+    .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #F1F5F9; padding-top: 12px; }
     .stat-item { display: flex; flex-direction: column; }
-    .stat-label { font-size: 0.7rem; color: var(--subtext); margin-bottom: 2px; }
-    .stat-val { font-size: 0.9rem; font-weight: 700; }
+    .stat-label { font-size: 0.72rem; color: var(--subtext); margin-bottom: 2px; }
+    .stat-val { font-size: 0.95rem; font-weight: 700; }
     .text-income { color: var(--income); }
     .text-expense { color: var(--expense); }
     .text-fixed { color: var(--fixed); }
     .text-saving { color: var(--saving); }
 
-    .tabs { display: flex; background: var(--card); margin: 0 16px 12px; border-radius: 12px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 0.78rem; font-weight: 600; color: var(--subtext); border: none; background: none; cursor: pointer; border-radius: 8px; }
+    .tabs { display: flex; background: var(--card); margin: 0 16px 12px; border-radius: 14px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #F1F5F9; }
+    .tab { flex: 1; text-align: center; padding: 9px 0; font-size: 0.8rem; font-weight: 700; color: var(--subtext); border: none; background: none; cursor: pointer; border-radius: 10px; }
     .tab.active { background: var(--primary); color: white; }
 
     .list-container { margin: 0 16px; }
-    .item-card { background: var(--card); padding: 12px 14px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-    .item-left { display: flex; flex-direction: column; gap: 3px; max-width: 68%; }
-    .item-title { font-weight: 600; font-size: 0.88rem; word-break: break-all; }
+    .item-card { background: var(--card); padding: 14px 16px; border-radius: 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); border: 1px solid #F8FAFC; }
+    .item-left { display: flex; flex-direction: column; gap: 4px; max-width: 68%; }
+    .item-title { font-weight: 700; font-size: 0.92rem; word-break: break-all; }
     .item-meta { font-size: 0.72rem; color: var(--subtext); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-    .tag { background: #EEF2FF; color: var(--primary); padding: 2px 5px; border-radius: 4px; font-weight: 600; font-size: 0.65rem; }
-    .tag-repeat { background: #FEE2E2; color: #DC2626; padding: 2px 5px; border-radius: 4px; font-weight: 600; font-size: 0.65rem; }
-    .tag-author { background: #FEF3C7; color: #B45309; padding: 2px 5px; border-radius: 4px; font-weight: 600; font-size: 0.65rem; }
+    .tag { background: #EEF2FF; color: var(--primary); padding: 2px 6px; border-radius: 6px; font-weight: 600; font-size: 0.65rem; }
+    .tag-repeat { background: #FEE2E2; color: #DC2626; padding: 2px 6px; border-radius: 6px; font-weight: 600; font-size: 0.65rem; }
+    .tag-author { background: #FEF3C7; color: #B45309; padding: 2px 6px; border-radius: 6px; font-weight: 600; font-size: 0.65rem; }
     .item-right { text-align: right; }
-    .item-amount { font-weight: 700; font-size: 0.92rem; }
-    .item-delete { background: none; border: none; color: #9CA3AF; font-size: 0.72rem; margin-top: 4px; cursor: pointer; }
+    .item-amount { font-weight: 800; font-size: 0.95rem; }
+    .item-delete { background: none; border: none; color: #94A3B8; font-size: 0.72rem; margin-top: 4px; cursor: pointer; }
 
     #viewStats { display: none; margin: 0 16px; }
-    .chart-box { background: var(--card); border-radius: 16px; padding: 20px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 14px; text-align: center; }
+    .chart-box { background: var(--card); border-radius: 20px; padding: 20px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 14px; text-align: center; }
     .chart-container { position: relative; width: 220px; height: 220px; margin: 0 auto 12px; }
-    .stats-breakdown-card { background: var(--card); border-radius: 16px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .stats-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F3F4F6; }
+    .stats-breakdown-card { background: var(--card); border-radius: 20px; padding: 18px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .stats-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #F1F5F9; }
     .stats-row:last-child { border-bottom: none; }
     .stats-label-group { display: flex; align-items: center; gap: 8px; }
     .color-dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -96,85 +117,127 @@
     .stats-amount { font-size: 0.88rem; font-weight: 700; }
     .stats-pct { font-size: 0.72rem; color: var(--subtext); }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--card); display: flex; border-top: 1px solid #E5E7EB; z-index: 50; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 62px; background: var(--card); display: flex; border-top: 1px solid #E2E8F0; z-index: 50; }
     .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; font-size: 0.72rem; font-weight: 600; color: var(--subtext); cursor: pointer; }
     .nav-btn.active { color: var(--primary); font-weight: 700; }
-    .nav-icon { font-size: 1.25rem; margin-bottom: 2px; }
+    .nav-icon { font-size: 1.3rem; margin-bottom: 2px; }
 
-    .fab { position: fixed; bottom: 74px; right: 20px; width: 54px; height: 54px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 40; }
+    .fab { position: fixed; bottom: 76px; right: 20px; width: 56px; height: 56px; background: var(--primary-gradient); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 40; }
 
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100; align-items: flex-end; backdrop-filter: blur(2px); }
     .modal.open { display: flex; }
-    .modal-content { background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 20px 18px 30px; max-height: 90vh; overflow-y: auto; }
-    .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
+    .modal-content { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 22px 18px 32px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; }
     .form-group { margin-bottom: 12px; }
-    .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
-    .form-input, select { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
+    .form-label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--subtext); margin-bottom: 5px; }
+    .form-input, select { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.92rem; outline: none; background: white; }
 
-    .custom-date-btn { width: 100%; padding: 11px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.92rem; font-weight: 600; text-align: left; background: #FFFFFF; color: var(--text); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    .date-panel { display: none; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-top: 6px; }
+    .custom-date-btn { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.92rem; font-weight: 600; text-align: left; background: #FFFFFF; color: var(--text); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .date-panel { display: none; background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-top: 6px; }
     .date-panel.open { display: block; }
     .date-picker-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
     .date-quick-btns { display: flex; gap: 6px; }
-    .btn-quick { flex: 1; padding: 6px; font-size: 0.75rem; border-radius: 6px; border: 1px solid #D1D5DB; background: white; cursor: pointer; font-weight: 600; color: var(--subtext); }
+    .btn-quick { flex: 1; padding: 7px; font-size: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: 600; color: var(--subtext); }
 
-    .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
-    .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; }
-    .btn-close { width: 100%; background: #F3F4F6; color: var(--subtext); border: none; padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
+    .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 12px 0 16px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .btn-submit { width: 100%; background: var(--primary-gradient); color: white; border: none; padding: 13px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+    .btn-close { width: 100%; background: #F1F5F9; color: var(--subtext); border: none; padding: 11px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
     
-    .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
-    .type-btn { padding: 8px 0; border: 1px solid #D1D5DB; border-radius: 8px; background: white; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-align: center; }
+    .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+    .type-btn { padding: 9px 0; border: 1.5px solid var(--border); border-radius: 10px; background: white; font-size: 0.85rem; font-weight: 700; cursor: pointer; text-align: center; color: var(--subtext); }
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    .tree-box { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+    .tree-box { background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
     .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
     .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; min-height: 36px; padding: 4px 0; }
-    .chip { display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid #D1D5DB; padding: 6px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; user-select: none; touch-action: none; }
-    .chip-handle { color: #9CA3AF; cursor: grab; font-size: 0.9rem; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; user-select: none; touch-action: none; }
+    .chip-handle { color: #94A3B8; cursor: grab; font-size: 0.9rem; }
+    .chip-handle:active { cursor: grabbing; }
     .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.95rem; padding-left: 2px; }
     .btn-del-main { background: none; border: none; color: #EF4444; font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px; }
     .add-row { display: flex; gap: 6px; margin-top: 6px; }
-    .btn-add { background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
   </style>
 </head>
 <body>
 
-  <!-- 1. 인증/로그인 화면 -->
-  <div class="auth-container" id="viewAuth">
-    <div class="brand-logo">2gether 💑</div>
-    <div class="brand-sub">둘이서 하나로 모으는 스마트 가계부</div>
+  <!-- 1. 리디자인된 인증/로그인 화면 -->
+  <div class="auth-wrapper" id="viewAuth">
+    <div class="auth-card">
+      <div class="brand-hero">
+        <div class="brand-icon-box">💑</div>
+        <div class="brand-title">2gether</div>
+        <div class="brand-tagline">둘이서 하나로 모으는 우리 집 자산 관리</div>
+      </div>
 
-    <div class="auth-input-group">
-      <input type="email" id="authEmail" class="auth-input" placeholder="이메일 주소" />
-      <input type="password" id="authPassword" class="auth-input" placeholder="비밀번호 (6자 이상)" />
-      <input type="text" id="authNickname" class="auth-input" placeholder="내 별칭 (예: 남편, 아내)" style="display:none;" />
+      <div class="auth-toggle-bar">
+        <button class="auth-toggle-btn active" id="tabLogin" onclick="setAuthMode(false)">로그인</button>
+        <button class="auth-toggle-btn" id="tabSignUp" onclick="setAuthMode(true)">회원가입</button>
+      </div>
+
+      <div class="input-field-group">
+        <div class="floating-input-box">
+          <input type="email" id="authEmail" class="app-input" placeholder="이메일 주소" />
+        </div>
+        <div class="floating-input-box">
+          <input type="password" id="authPassword" class="app-input" placeholder="비밀번호 (6자 이상)" />
+        </div>
+        <div class="floating-input-box" id="nicknameBox" style="display:none;">
+          <input type="text" id="authNickname" class="app-input" placeholder="내 별칭 (예: 남편, 아내)" />
+        </div>
+      </div>
+
+      <button class="btn-gradient-primary" id="authMainBtn" onclick="handleAuth()">시작하기</button>
     </div>
-
-    <button class="auth-btn-main" id="authMainBtn" onclick="handleAuth()">로그인</button>
-    <div class="auth-toggle" id="authToggleBtn" onclick="toggleAuthMode()">처음이신가요? 회원가입하기</div>
   </div>
 
-  <!-- 2. 부부 매칭 온보딩 화면 -->
-  <div class="auth-container" id="viewOnboarding" style="display:none;">
-    <div class="brand-logo">2gether</div>
-    <div class="brand-sub">가계부 연결 방식을 선택해 주세요</div>
-
-    <div class="onboard-box">
-      <div class="card-choice" onclick="createHousehold()">
-        <h3>✨ 새 가계부 방 만들기</h3>
-        <p>새로운 초대 코드를 생성하고 배우자를 초대합니다.</p>
+  <!-- 2. 리디자인된 부부 매칭 온보딩 화면 -->
+  <div class="auth-wrapper" id="viewOnboarding" style="display:none;">
+    <div class="auth-card">
+      <div class="brand-hero">
+        <div class="brand-icon-box">💌</div>
+        <div class="brand-title">가계부 페어링</div>
+        <div class="brand-tagline">함께 쓸 가계부 공간을 설정해 주세요</div>
       </div>
 
-      <div class="card-choice" onclick="showJoinHouseholdInput()">
-        <h3>🔗 초대 코드로 연결하기</h3>
-        <p>배우자에게 전달받은 6자리 초대 코드를 입력합니다.</p>
-      </div>
-    </div>
+      <div class="pairing-card-grid" id="pairingOptions">
+        <div class="pair-choice-card" onclick="createHousehold()">
+          <div class="card-emoji-box">🏠</div>
+          <div class="card-text-box">
+            <h3>우리가 처음 시작해요</h3>
+            <p>새 가계부를 만들고 배우자를 초대할 코드를 생성합니다.</p>
+          </div>
+        </div>
 
-    <div id="joinInputArea" style="display:none; margin-top:16px;">
-      <input type="text" id="joinInviteCode" class="auth-input" placeholder="초대 코드 입력 (예: 2G-XXXX)" style="text-transform:uppercase; text-align:center; font-weight:700; letter-spacing:2px;" />
-      <button class="auth-btn-main" style="margin-top:8px;" onclick="joinHousehold()">연결 완료하기</button>
+        <div class="pair-choice-card" onclick="showJoinHouseholdInput()">
+          <div class="card-emoji-box">🔗</div>
+          <div class="card-text-box">
+            <h3>초대 코드를 받았어요</h3>
+            <p>배우자에게 전달받은 6자리 코드를 입력하여 연결합니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 초대 코드 입력창 (참여 시) -->
+      <div id="joinInputArea" style="display:none; margin-top:16px;">
+        <div class="floating-input-box">
+          <input type="text" id="joinInviteCode" class="app-input" placeholder="초대 코드 입력 (예: 2G-XXXX)" style="text-transform:uppercase; text-align:center; font-weight:800; font-size:1.1rem; letter-spacing:3px;" />
+        </div>
+        <button class="btn-gradient-primary" style="margin-top:10px;" onclick="joinHousehold()">연결 완료하고 시작하기</button>
+        <button class="btn-close" style="margin-top:8px;" onclick="hideJoinHouseholdInput()">이전으로</button>
+      </div>
+
+      <!-- 초대장 공유 카드 (방 생성 직후) -->
+      <div id="shareInviteArea" style="display:none;" class="invite-share-box">
+        <div style="font-size:0.85rem; font-weight:700; color:var(--text);">🎉 가계부 방이 생성되었습니다!</div>
+        <div class="invite-code-pill" id="newlyCreatedCode">2G-XXXX</div>
+        <p style="font-size:0.78rem; color:var(--subtext); margin-bottom:14px; line-height:1.4;">
+          배우자에게 이 코드를 전달해 주세요.<br>배우자가 가입 후 코드를 입력하면 즉시 동기화됩니다.
+        </p>
+        <button class="btn-gradient-primary" onclick="shareInviteCodeNative()">💌 배우자에게 초대장 보내기</button>
+        <button class="btn-close" style="margin-top:8px;" onclick="checkSession()">가계부로 이동하기</button>
+      </div>
     </div>
   </div>
 
@@ -190,7 +253,7 @@
       </div>
     </div>
 
-    <!-- 깔끔하게 분리된 월 선택 바 -->
+    <!-- 월 선택 바 -->
     <div class="month-bar">
       <button class="month-btn" onclick="changeMonth(-1)">◀</button>
       <span class="month-title" id="currentMonthText">2026년 8월</span>
@@ -224,7 +287,7 @@
         <div class="chart-container">
           <canvas id="expenseDoughnutChart"></canvas>
         </div>
-        <div id="noChartText" style="display:none; color:#9CA3AF; font-size:0.85rem; padding:30px 0;">지출 내역이 없습니다.</div>
+        <div id="noChartText" style="display:none; color:#94A3B8; font-size:0.85rem; padding:30px 0;">지출 내역이 없습니다.</div>
       </div>
       <div class="stats-breakdown-card">
         <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--text);">카테고리별 상세 지출</div>
@@ -265,7 +328,7 @@
       <div class="form-group">
         <label class="form-label">날짜</label>
         <button type="button" class="custom-date-btn" onclick="toggleDatePanel()">
-          <span id="selectedDateDisplay">2026년 8월 25일 (화)</span>
+          <span id="selectedDateDisplay">2026년 8월 26일 (수)</span>
           <span>📅</span>
         </button>
         <div class="date-panel" id="datePanel">
@@ -295,7 +358,7 @@
 
       <div class="form-group">
         <label class="form-label">내용 / 지출처</label>
-        <input type="text" id="txTitle" class="form-input" placeholder="예: 마트, 배달음식, 관리비 등" />
+        <input type="text" id="txTitle" class="form-input" placeholder="예: 마트 장보기, 배달음식, 관리비 등" />
       </div>
 
       <div class="form-group">
@@ -331,7 +394,7 @@
       <div class="tree-box">
         <div class="tree-header">💑 커플 연결 정보</div>
         <div style="font-size:0.8rem; color:var(--subtext); margin-bottom:8px;">초대 코드: <b id="settingsInviteCodeText" style="color:var(--primary);"></b></div>
-        <button class="btn-quick" style="width:100%; padding:8px;" onclick="copyInviteCode()">초대 코드 복사하여 배우자에게 공유</button>
+        <button class="btn-quick" style="width:100%; padding:9px; font-weight:700;" onclick="copyInviteCode()">초대 코드 복사하여 배우자에게 공유</button>
       </div>
 
       <div class="tree-box">
@@ -359,7 +422,7 @@
       <div class="form-label" style="margin-top:14px;">현재 분류 목록 (드래그 정렬 / 삭제)</div>
       <div id="categoryTreeDisplay"></div>
 
-      <hr style="border:none; border-top:1px solid #E5E7EB; margin:16px 0;" />
+      <hr style="border:none; border-top:1px solid #E2E8F0; margin:16px 0;" />
 
       <div class="form-label">결제수단 / 계좌 관리 (드래그 정렬 / 삭제)</div>
       <div class="add-row">
@@ -368,13 +431,13 @@
       </div>
       <div class="chip-container" id="paymentChips" style="margin-top:8px;"></div>
 
-      <button class="btn-close" style="margin-top:16px; background:#FEE2E2; color:#DC2626;" onclick="handleLogout()">로그아웃</button>
+      <button class="btn-close" style="margin-top:16px; background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="handleLogout()">로그아웃</button>
       <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:6px;">설정 완료</button>
     </div>
   </div>
 
   <script>
-    const APP_VERSION = '13.1';
+    const APP_VERSION = '14.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -384,6 +447,7 @@
     let currentUser = null;
     let currentHousehold = null;
     let isSignUpMode = false;
+    let newlyCreatedInviteCode = '';
 
     let transactions = [];
     let doughnutChartInstance = null;
@@ -441,7 +505,7 @@
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
-    // --- 인증 및 온보딩 ---
+    // --- 인증 및 온보딩 로직 ---
     async function checkSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
@@ -491,16 +555,17 @@
     }
 
     function showView(view) {
-      document.getElementById('viewAuth').style.display = view === 'auth' ? 'block' : 'none';
-      document.getElementById('viewOnboarding').style.display = view === 'onboarding' ? 'block' : 'none';
+      document.getElementById('viewAuth').style.display = view === 'auth' ? 'flex' : 'none';
+      document.getElementById('viewOnboarding').style.display = view === 'onboarding' ? 'flex' : 'none';
       document.getElementById('appView').style.display = view === 'app' ? 'block' : 'none';
     }
 
-    function toggleAuthMode() {
-      isSignUpMode = !isSignUpMode;
-      document.getElementById('authNickname').style.display = isSignUpMode ? 'block' : 'none';
-      document.getElementById('authMainBtn').innerText = isSignUpMode ? '회원가입' : '로그인';
-      document.getElementById('authToggleBtn').innerText = isSignUpMode ? '이미 계정이 있으신가요? 로그인' : '처음이신가요? 회원가입하기';
+    function setAuthMode(isSignUp) {
+      isSignUpMode = isSignUp;
+      document.getElementById('tabLogin').classList.toggle('active', !isSignUp);
+      document.getElementById('tabSignUp').classList.toggle('active', isSignUp);
+      document.getElementById('nicknameBox').style.display = isSignUp ? 'block' : 'none';
+      document.getElementById('authMainBtn').innerText = isSignUp ? '회원가입' : '시작하기';
     }
 
     async function handleAuth() {
@@ -535,7 +600,7 @@
 
             if (!data.session) {
               alert(`[${email}] 주소로 인증 메일이 발송되었습니다.\n메일함에서 인증 링크를 클릭한 뒤 로그인해 주세요.`);
-              toggleAuthMode();
+              setAuthMode(false);
               return;
             }
 
@@ -554,7 +619,7 @@
       } catch (err) {
         alert((isSignUpMode ? '회원가입' : '로그인') + ' 실패: ' + err.message);
       } finally {
-        authBtn.innerText = isSignUpMode ? '회원가입' : '로그인';
+        authBtn.innerText = isSignUpMode ? '회원가입' : '시작하기';
         authBtn.disabled = false;
       }
     }
@@ -592,12 +657,20 @@
 
       if (profError) return alert('프로필 연동 실패: ' + profError.message);
 
-      alert(`가계부 방이 생성되었습니다!\n초대 코드: ${code}\n배우자에게 전달하세요.`);
-      await checkSession();
+      newlyCreatedInviteCode = code;
+      document.getElementById('newlyCreatedCode').innerText = code;
+      document.getElementById('pairingOptions').style.display = 'none';
+      document.getElementById('shareInviteArea').style.display = 'block';
     }
 
     function showJoinHouseholdInput() {
+      document.getElementById('pairingOptions').style.display = 'none';
       document.getElementById('joinInputArea').style.display = 'block';
+    }
+
+    function hideJoinHouseholdInput() {
+      document.getElementById('joinInputArea').style.display = 'none';
+      document.getElementById('pairingOptions').style.display = 'flex';
     }
 
     async function joinHousehold() {
@@ -626,14 +699,27 @@
       await checkSession();
     }
 
-    function copyInviteCode() {
-      if (!currentHousehold) return;
-      navigator.clipboard.writeText(currentHousehold.invite_code).then(() => {
-        alert(`초대 코드 [${currentHousehold.invite_code}]가 복사되었습니다. 배우자에게 전달하세요!`);
+    function shareInviteCodeNative() {
+      const text = `[2gether] 우리 둘만의 공유 가계부 초대장입니다!\n초대 코드: ${newlyCreatedInviteCode}\n가입 후 코드를 입력해 주세요.`;
+      if (navigator.share) {
+        navigator.share({
+          title: '2gether 가계부 초대',
+          text: text
+        }).catch(() => {});
+      } else {
+        copyInviteCode(newlyCreatedInviteCode);
+      }
+    }
+
+    function copyInviteCode(customCode) {
+      const code = customCode || (currentHousehold ? currentHousehold.invite_code : '');
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(() => {
+        alert(`초대 코드 [${code}]가 복사되었습니다. 배우자에게 전달하세요!`);
       });
     }
 
-    // --- 앱 메인 동작 로직 ---
+    // --- 메인 앱 로직 ---
     async function initApp() {
       updateMonthText();
       initDateWheel();
@@ -1155,7 +1241,7 @@
 
       const listContainer = document.getElementById('transactionList');
       if (filtered.length === 0) {
-        listContainer.innerHTML = '<div style="text-align:center; color:#9CA3AF; padding: 40px 0;">등록된 내역이 없습니다.</div>';
+        listContainer.innerHTML = '<div style="text-align:center; color:#94A3B8; padding: 40px 0;">등록된 내역이 없습니다.</div>';
         return;
       }
 
@@ -1224,7 +1310,7 @@
       if (totalExp === 0 || labels.length === 0) {
         canvas.style.display = 'none';
         noChartText.style.display = 'block';
-        breakdownList.innerHTML = '<div style="text-align:center; color:#9CA3AF; padding:20px 0; font-size:0.8rem;">지출 데이터가 없습니다.</div>';
+        breakdownList.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px 0; font-size:0.8rem;">지출 데이터가 없습니다.</div>';
         if (doughnutChartInstance) doughnutChartInstance.destroy();
         return;
       }
