@@ -66,6 +66,7 @@
     .nav-arrow-btn { background: none; border: none; font-size: 0.8rem; color: var(--subtext); cursor: pointer; padding: 2px 4px; }
     .nav-month-text { font-size: 0.88rem; font-weight: 800; color: var(--text); }
     .navbar-actions { display: flex; align-items: center; gap: 6px; }
+    .btn-fixed-hub { font-size: 0.72rem; background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; padding: 4px 8px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 2px; }
     .code-badge-sm { font-size: 0.7rem; background: var(--primary-light); color: var(--primary); padding: 4px 8px; border-radius: 12px; font-weight: 700; cursor: pointer; }
     .btn-icon-nav { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
 
@@ -120,6 +121,7 @@
     .btn-center-add { width: 48px; height: 48px; border-radius: 50%; background: var(--primary-gradient); color: white; border: none; font-size: 26px; font-weight: 300; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); cursor: pointer; transition: transform 0.1s; }
     .btn-center-add:active { transform: scale(0.94); }
 
+    /* 모달 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100; align-items: flex-end; backdrop-filter: blur(2px); }
     .modal.open { display: flex; }
     .modal-content { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 22px 18px 32px; max-height: 90vh; overflow-y: auto; }
@@ -143,6 +145,14 @@
     .type-btn { padding: 9px 0; border: 1.5px solid var(--border); border-radius: 10px; background: white; font-size: 0.85rem; font-weight: 700; cursor: pointer; text-align: center; color: var(--subtext); }
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* 고정비 마스터 관리실 전용 UI */
+    .master-summary-box { background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; }
+    .master-card { background: #FFFFFF; border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .master-card-left { display: flex; align-items: center; gap: 10px; }
+    .master-actions { display: flex; gap: 6px; }
+    .btn-m-action { background: #F1F5F9; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; color: var(--subtext); }
+    .btn-m-action.danger { color: #DC2626; background: #FEE2E2; border-color: #FECACA; }
 
     .tree-box { background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
     .tree-header { font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
@@ -240,6 +250,7 @@
       </div>
 
       <div class="navbar-actions">
+        <button class="btn-fixed-hub" onclick="openFixedMasterModal()" title="고정비 관리실">🏢 고정비</button>
         <span class="code-badge-sm" id="displayInviteCode" onclick="copyInviteCode()" title="초대 코드 복사">🔗 코드</span>
         <button class="btn-icon-nav" onclick="openSettingsModal()" title="설정">⚙️</button>
       </div>
@@ -314,7 +325,91 @@
     </div>
   </div>
 
-  <!-- 내역 등록/수정 모달 -->
+  <!-- 4. 고정비 마스터 관리실 모달 -->
+  <div class="modal" id="fixedMasterModal">
+    <div class="modal-content">
+      <div class="modal-title" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>🏢 고정비 마스터 관리실</span>
+      </div>
+
+      <div class="master-summary-box">
+        <div style="font-size:0.75rem; font-weight:700; color:#B45309; margin-bottom:2px;">매월 고정 지출/저축 총합계</div>
+        <div style="font-size:1.3rem; font-weight:900; color:#92400E;" id="masterTotalSumText">0원</div>
+        <div style="font-size:0.72rem; color:#B45309; margin-top:4px;">
+          고정비: <b id="masterFixedSub">0원</b> | 저축/투자: <b id="masterSavingSub">0원</b>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button class="btn-submit" style="flex:1; padding:10px; font-size:0.82rem; margin-top:0;" onclick="openNewFixedMasterForm()">➕ 새 고정비 등록</button>
+        <button class="btn-quick" style="flex:1; padding:10px; font-size:0.82rem; font-weight:700; background:#EEF2FF; color:var(--primary); border-color:#C7D2FE;" onclick="manualSyncRecurringForCurrentMonth()">🔄 이번 달에 즉시 적용</button>
+      </div>
+
+      <!-- 신규/수정 등록 폼 -->
+      <div id="masterFormArea" style="display:none; background:#F8FAFC; border:1.5px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px;">
+        <div style="font-size:0.85rem; font-weight:800; margin-bottom:8px;" id="masterFormTitle">➕ 고정비 템플릿 추가</div>
+        
+        <div class="type-selector" style="margin-bottom:8px;">
+          <button type="button" class="type-btn selected" id="mFlowBtn-지출" onclick="selectMasterFlow('지출')">고정 지출</button>
+          <button type="button" class="type-btn" id="mFlowBtn-저축" onclick="selectMasterFlow('저축')">고정 저축</button>
+        </div>
+
+        <div class="category-grid" style="margin-bottom:8px;">
+          <div>
+            <label class="form-label">대분류</label>
+            <input type="text" id="mMainCat" class="form-input" placeholder="예: 대출, 보험, 통신" />
+          </div>
+          <div>
+            <label class="form-label">중분류</label>
+            <input type="text" id="mSubCat" class="form-input" placeholder="예: 집단대출, 암보험" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">항목명 / 지출처</label>
+          <input type="text" id="mTitle" class="form-input" placeholder="예: 집단대출, 핸드폰 요금 등" />
+        </div>
+
+        <div class="category-grid" style="margin-bottom:8px;">
+          <div>
+            <label class="form-label">금액 (원)</label>
+            <input type="number" id="mAmount" class="form-input" placeholder="0" inputmode="numeric" />
+          </div>
+          <div>
+            <label class="form-label">결제일 (매월 N일)</label>
+            <input type="number" id="mDay" class="form-input" placeholder="1" min="1" max="31" value="1" />
+          </div>
+        </div>
+
+        <div class="category-grid" style="margin-bottom:8px;">
+          <div>
+            <label class="form-label">결제수단</label>
+            <input type="text" id="mPayment" class="form-input" placeholder="예: 자동이체" value="자동이체" />
+          </div>
+          <div>
+            <label class="form-label">작성자</label>
+            <select id="mAuthor" class="form-input">
+              <option value="공동">공동</option>
+              <option value="남편">남편</option>
+              <option value="아내">아내</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:10px;">
+          <button class="btn-submit" style="flex:2; padding:10px;" onclick="saveFixedMasterTemplate()">마스터 저장</button>
+          <button class="btn-close" style="flex:1; padding:10px; margin-top:0;" onclick="closeMasterFormArea()">취소</button>
+        </div>
+      </div>
+
+      <div class="form-label">등록된 고정비 마스터 목록 (<span id="masterCountText">0</span>개)</div>
+      <div id="masterCardList" style="max-height:50vh; overflow-y:auto; padding-right:2px;"></div>
+
+      <button class="btn-close" style="margin-top:12px;" onclick="closeFixedMasterModal()">관리실 나가기</button>
+    </div>
+  </div>
+
+  <!-- 일반 내역 등록/수정 모달 -->
   <div class="modal" id="inputModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitleText">가계부 등록</div>
@@ -378,7 +473,7 @@
 
       <div class="checkbox-group">
         <input type="checkbox" id="txIsRecurring" style="width:18px; height:18px;" />
-        <label for="txIsRecurring">매월 같은 날짜에 자동 생성 (고정 반복)</label>
+        <label for="txIsRecurring">고정비 마스터로 등록 (매월 자동 반영)</label>
       </div>
 
       <div class="form-group">
@@ -423,6 +518,12 @@
       </div>
 
       <div class="tree-box">
+        <div class="tree-header">🏢 고정비 마스터 관리실 바로가기</div>
+        <p style="font-size:0.75rem; color:var(--subtext); margin-bottom:8px;">매달 나가는 대출, 보험, 통신비 템플릿을 한 번에 관리합니다.</p>
+        <button class="btn-quick" style="width:100%; padding:9px; font-weight:700; background:#FEF3C7; color:#B45309;" onclick="openFixedMasterModal()">고정비 관리실 열기</button>
+      </div>
+
+      <div class="tree-box">
         <div class="tree-header">➕ 새 대분류 추가</div>
         <div class="add-row">
           <select id="newCatType" class="form-input" style="flex:1;">
@@ -462,7 +563,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '15.2';
+    const APP_VERSION = '16.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -486,6 +587,10 @@
     let transactions = [];
     let doughnutChartInstance = null;
     let isFetching = false;
+
+    // 고정비 마스터 상태
+    let editingMasterId = null;
+    let selectedMasterFlow = '지출';
 
     const defaultCategories = {
       "수입": {
@@ -539,7 +644,7 @@
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
-    // --- 인증 & 온보딩 (튕김 방지 및 안전 세션 복구) ---
+    // --- 인증 & 세션 복구 ---
     async function checkSession() {
       try {
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
@@ -551,7 +656,6 @@
 
         currentUser = session.user;
         
-        // 1. 프로필 조회 시도
         let profile = null;
         try {
           const { data, error } = await supabaseClient
@@ -560,39 +664,26 @@
             .eq('id', currentUser.id)
             .maybeSingle();
             
-          if (!error && data) {
-            profile = data;
-          }
-        } catch (e) {
-          console.warn('프로필 조회 예외:', e);
-        }
+          if (!error && data) profile = data;
+        } catch (e) {}
 
-        // 프로필 데이터가 없으면 안전하게 생성
         if (!profile) {
           try {
-            const { data: newProfile, error: upsertErr } = await supabaseClient
+            const { data: newProfile } = await supabaseClient
               .from('profiles')
-              .upsert([{ 
-                id: currentUser.id, 
-                email: currentUser.email, 
-                nickname: '사용자' 
-              }])
+              .upsert([{ id: currentUser.id, email: currentUser.email, nickname: '사용자' }])
               .select()
               .single();
-            if (!upsertErr && newProfile) profile = newProfile;
-          } catch (e) {
-            console.warn('프로필 생성 예외:', e);
-          }
+            if (newProfile) profile = newProfile;
+          } catch (e) {}
         }
 
-        // 2. 가계부 연결 여부 확인
         if (!profile || !profile.household_id) {
           showView('onboarding');
           return;
         }
 
-        // 3. 가계부 방 정보 조회
-        const { data: household, error: houseErr } = await supabaseClient
+        const { data: household } = await supabaseClient
           .from('households')
           .select('*')
           .eq('id', profile.household_id)
@@ -608,12 +699,8 @@
           showView('onboarding');
         }
       } catch (err) {
-        console.error('세션 체크 중 예외 발생:', err);
-        if (!currentUser) {
-          showView('auth');
-        } else {
-          showView('onboarding');
-        }
+        if (!currentUser) showView('auth');
+        else showView('onboarding');
       }
     }
 
@@ -759,7 +846,7 @@
       });
     }
 
-    // --- 메인 앱 로직 ---
+    // --- 메인 앱 초기화 ---
     async function initApp() {
       updateMonthText();
       initDateWheel();
@@ -906,10 +993,685 @@
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
       if (e && e.target) e.target.classList.add('selected');
       renderMainCategories();
-      const mainCat = document.getElementById('txMainCategory').value;
-      document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
     }
 
+    // --- 고정비 마스터 관리실 기능 ---
+    function openFixedMasterModal() {
+      renderFixedMasterList();
+      document.getElementById('fixedMasterModal').classList.add('open');
+    }
+
+    function closeFixedMasterModal() {
+      document.getElementById('fixedMasterModal').classList.remove('open');
+      closeMasterFormArea();
+    }
+
+    function selectMasterFlow(flow) {
+      selectedMasterFlow = flow;
+      document.getElementById('mFlowBtn-지출').classList.toggle('selected', flow === '지출');
+      document.getElementById('mFlowBtn-저축').classList.toggle('selected', flow === '저축');
+      if (flow === '저축') {
+        document.getElementById('mMainCat').value = '저축';
+        document.getElementById('mSubCat').value = '적금';
+      } else {
+        document.getElementById('mMainCat').value = '고정비';
+        document.getElementById('mSubCat').value = '대출';
+      }
+    }
+
+    function getUniqueRecurringTemplates() {
+      const allRecurring = transactions.filter(t => t.is_recurring === true);
+      const uniqueMap = new Map();
+      allRecurring.forEach(t => {
+        const key = `${t.title.trim()}__${Number(t.amount)}__${t.main_category}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, t);
+        }
+      });
+      return Array.from(uniqueMap.values());
+    }
+
+    function renderFixedMasterList() {
+      const templates = getUniqueRecurringTemplates();
+      document.getElementById('masterCountText').innerText = templates.length;
+
+      let fixedTotal = 0, savingTotal = 0;
+      templates.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        const flow = t.flow_type || t.type;
+        if (flow === '저축') savingTotal += amt;
+        else fixedTotal += amt;
+      });
+
+      document.getElementById('masterTotalSumText').innerText = (fixedTotal + savingTotal).toLocaleString() + '원';
+      document.getElementById('masterFixedSub').innerText = fixedTotal.toLocaleString() + '원';
+      document.getElementById('masterSavingSub').innerText = savingTotal.toLocaleString() + '원';
+
+      const container = document.getElementById('masterCardList');
+      if (templates.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:30px 0; font-size:0.8rem;">등록된 고정비 마스터 템플릿이 없습니다.</div>';
+        return;
+      }
+
+      container.innerHTML = templates.map(t => {
+        const flow = t.flow_type || t.type;
+        const isSaving = (flow === '저축');
+        const emoji = getCategoryEmoji(t.main_category, t.sub_category || '', flow);
+        const day = (t.date ? String(t.date).split('-')[2] : '01') || '01';
+
+        return `
+          <div class="master-card">
+            <div class="master-card-left">
+              <span style="font-size:1.3rem;">${emoji}</span>
+              <div>
+                <div style="font-size:0.88rem; font-weight:800; color:var(--text);">${t.title}</div>
+                <div style="font-size:0.72rem; color:var(--subtext);">
+                  ${t.main_category} > ${t.sub_category || '일반'} · 매월 ${Number(day)}일 · ${t.payment || '자동이체'}
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.9rem; font-weight:900; color:${isSaving ? 'var(--saving)' : 'var(--fixed)'};">
+                ${Number(t.amount).toLocaleString()}원
+              </div>
+              <div class="master-actions" style="margin-top:4px;">
+                <button class="btn-m-action" onclick='openEditFixedMaster(${JSON.stringify(t)})'>수정</button>
+                <button class="btn-m-action danger" onclick="deleteFixedMaster(${t.id}, '${t.title}')">삭제</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openNewFixedMasterForm() {
+      editingMasterId = null;
+      document.getElementById('masterFormTitle').innerText = '➕ 고정비 템플릿 추가';
+      document.getElementById('mTitle').value = '';
+      document.getElementById('mAmount').value = '';
+      document.getElementById('mDay').value = '1';
+      document.getElementById('mPayment').value = '자동이체';
+      document.getElementById('mAuthor').value = '공동';
+      selectMasterFlow('지출');
+      document.getElementById('masterFormArea').style.display = 'block';
+    }
+
+    function openEditFixedMaster(t) {
+      editingMasterId = t.id;
+      document.getElementById('masterFormTitle').innerText = '✏️ 고정비 템플릿 수정';
+      document.getElementById('mTitle').value = t.title || '';
+      document.getElementById('mAmount').value = t.amount || '';
+      const day = (t.date ? String(t.date).split('-')[2] : '1') || '1';
+      document.getElementById('mDay').value = Number(day);
+      document.getElementById('mPayment').value = t.payment || '자동이체';
+      document.getElementById('mAuthor').value = t.author || '공동';
+      document.getElementById('mMainCat').value = t.main_category || '고정비';
+      document.getElementById('mSubCat').value = t.sub_category || '';
+      selectMasterFlow(t.flow_type || t.type || '지출');
+      document.getElementById('masterFormArea').style.display = 'block';
+    }
+
+    function closeMasterFormArea() {
+      document.getElementById('masterFormArea').style.display = 'none';
+      editingMasterId = null;
+    }
+
+    async function saveFixedMasterTemplate() {
+      if (!currentHousehold) return;
+      const title = document.getElementById('mTitle').value.trim();
+      const amount = Number(document.getElementById('mAmount').value);
+      const dayVal = Math.max(1, Math.min(31, Number(document.getElementById('mDay').value) || 1));
+      const dayStr = String(dayVal).padStart(2, '0');
+      const mainCat = document.getElementById('mMainCat').value.trim() || (selectedMasterFlow === '저축' ? '저축' : '고정비');
+      const subCat = document.getElementById('mSubCat').value.trim() || '일반';
+      const payment = document.getElementById('mPayment').value.trim() || '자동이체';
+      const author = document.getElementById('mAuthor').value;
+
+      if (!title || !amount) return alert('항목명과 금액을 입력해주세요.');
+
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      const templateDate = `${targetPrefix}-${dayStr}`;
+
+      const payload = {
+        household_id: currentHousehold.id,
+        date: templateDate,
+        flow_type: selectedMasterFlow,
+        type: selectedMasterFlow,
+        main_category: mainCat,
+        sub_category: subCat,
+        category: `${mainCat} > ${subCat}`,
+        title: title,
+        amount: amount,
+        payment: payment,
+        author: author,
+        is_recurring: true
+      };
+
+      if (editingMasterId) {
+        await supabaseClient.from('transactions').update(payload).eq('id', editingMasterId);
+      } else {
+        await supabaseClient.from('transactions').insert([payload]);
+      }
+
+      closeMasterFormArea();
+      await loadTransactions();
+      renderFixedMasterList();
+      alert('고정비 마스터 정보가 저장되었습니다.');
+    }
+
+    async function deleteFixedMaster(id, title) {
+      if (!confirm(`고정비 템플릿 '${title}'을(를) 삭제하시겠습니까?\n(마스터에서 삭제하면 다음 달부터 자동 생성되지 않습니다.)`)) return;
+      await supabaseClient.from('transactions').delete().eq('id', id);
+      await loadTransactions();
+      renderFixedMasterList();
+    }
+
+    async function manualSyncRecurringForCurrentMonth() {
+      await autoApplyRecurringExpenses();
+      render();
+      alert(`${currentYear}년 ${currentMonth}월 고정비가 동기화되었습니다!`);
+    }
+
+    // --- 중복 제거 및 당월 고정비 자동 생성 로직 (증식 버그 완전 해결) ---
+    async function cleanupDuplicateTransactions() {
+      if (!currentHousehold || transactions.length === 0) return;
+      const seen = new Set();
+      const duplicateIds = [];
+
+      transactions.forEach(t => {
+        if (!t.date || !t.title) return;
+        const dStr = String(t.date).split('T')[0];
+        const key = `${t.household_id}_${dStr}_${t.title.trim()}_${Number(t.amount)}_${t.main_category}`;
+        if (seen.has(key)) {
+          duplicateIds.push(t.id);
+        } else {
+          seen.add(key);
+        }
+      });
+
+      if (duplicateIds.length > 0) {
+        console.log(`중복 고정비 데이터 ${duplicateIds.length}건 자동 청소 중...`);
+        await supabaseClient.from('transactions').delete().in('id', duplicateIds);
+        transactions = transactions.filter(t => !duplicateIds.includes(t.id));
+      }
+    }
+
+    async function autoApplyRecurringExpenses() {
+      if (!currentHousehold) return;
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      
+      const recurringTemplates = getUniqueRecurringTemplates();
+      const currentMonthData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
+
+      const newEntries = [];
+      recurringTemplates.forEach(template => {
+        const exists = currentMonthData.some(item => 
+          item.title.trim() === template.title.trim() && 
+          Number(item.amount) === Number(template.amount)
+        );
+
+        if (!exists) {
+          const originalDay = String(template.date).split('-')[2] || '01';
+          const cleanDay = originalDay.slice(0, 2);
+          
+          newEntries.push({
+            household_id: currentHousehold.id,
+            date: `${targetPrefix}-${cleanDay}`,
+            flow_type: template.flow_type || template.type,
+            type: template.flow_type || template.type,
+            main_category: template.main_category,
+            sub_category: template.sub_category,
+            category: `${template.main_category || ''} > ${template.sub_category || ''}`,
+            title: template.title,
+            amount: template.amount,
+            payment: template.payment,
+            memo: template.memo || '고정비 자동반영',
+            author: template.author,
+            is_recurring: false // [핵심] 생성된 인스턴스는 false로 저장하여 템플릿 중복 증식 원천 방지!
+          });
+        }
+      });
+
+      if (newEntries.length > 0) {
+        await supabaseClient.from('transactions').insert(newEntries);
+        const { data } = await supabaseClient
+          .from('transactions')
+          .select('*')
+          .eq('household_id', currentHousehold.id)
+          .order('date', { ascending: false });
+        if (data) transactions = data;
+      }
+    }
+
+    // --- 일반 내역 로드 및 실시간 동기화 ---
+    async function loadTransactions() {
+      if (isFetching || !currentHousehold) return;
+      isFetching = true;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('transactions')
+          .select('*')
+          .eq('household_id', currentHousehold.id)
+          .order('date', { ascending: false });
+        
+        if (!error && Array.isArray(data)) {
+          transactions = data;
+          await cleanupDuplicateTransactions();
+        }
+      } catch (err) {
+        console.warn('DB 로드 에러:', err);
+      } finally {
+        isFetching = false;
+      }
+      
+      try {
+        await autoApplyRecurringExpenses();
+      } catch (err) {}
+
+      render();
+    }
+
+    function listenRealtime() {
+      if (!currentHousehold) return;
+      supabaseClient
+        .channel(`public:transactions:${currentHousehold.id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'transactions',
+          filter: `household_id=eq.${currentHousehold.id}`
+        }, () => {
+          loadTransactions();
+        })
+        .subscribe();
+    }
+
+    async function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      updateMonthText();
+      await loadTransactions();
+      if (currentMainView === 'stats') renderStats();
+    }
+
+    function switchFilterTab(tab, e) {
+      activeFilterTab = tab;
+      document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      render();
+    }
+
+    // --- 가계부 등록/수정/삭제 모달 로직 ---
+    function openModal() { 
+      editingTxId = null;
+      document.getElementById('modalTitleText').innerText = '가계부 등록';
+      document.getElementById('saveBtn').innerText = '저장하기';
+      document.getElementById('txTitle').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txMemo').value = '';
+      document.getElementById('txIsRecurring').checked = false;
+      applyLastUsedFlowType();
+      setDateWheelValues(currentYear, currentMonth, today.getDate());
+      document.getElementById('datePanel').classList.remove('open');
+      document.getElementById('inputModal').classList.add('open'); 
+    }
+    
+    function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
+
+    function openDetailModal(tx) {
+      selectedTxForDetail = tx;
+      const flow = tx.flow_type || tx.type;
+      const isInc = (flow === '수입' || flow === 'INCOME');
+      
+      document.getElementById('detailTitle').innerText = tx.title;
+      const amtElem = document.getElementById('detailAmount');
+      amtElem.innerText = `${isInc ? '+' : '-'}${Number(tx.amount).toLocaleString()}원`;
+      amtElem.style.color = isInc ? 'var(--income)' : 'var(--expense)';
+      
+      document.getElementById('detailDate').innerText = tx.date;
+      document.getElementById('detailCategory').innerText = tx.main_category ? `${tx.main_category} > ${tx.sub_category}` : (tx.category || '-');
+      document.getElementById('detailPayment').innerText = tx.payment || '-';
+      document.getElementById('detailAuthor').innerText = tx.author || '공동';
+      
+      const memoRow = document.getElementById('detailMemoRow');
+      if (tx.memo) {
+        memoRow.style.display = 'block';
+        document.getElementById('detailMemo').innerText = tx.memo;
+      } else {
+        memoRow.style.display = 'none';
+      }
+
+      document.getElementById('detailModal').classList.add('open');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.remove('open');
+      selectedTxForDetail = null;
+    }
+
+    function openEditModalFromDetail() {
+      if (!selectedTxForDetail) return;
+      const tx = selectedTxForDetail;
+      closeDetailModal();
+
+      editingTxId = tx.id;
+      document.getElementById('modalTitleText').innerText = '가계부 수정';
+      document.getElementById('saveBtn').innerText = '수정 완료';
+
+      selectedFlowType = tx.flow_type || tx.type || '지출';
+      applyLastUsedFlowType();
+
+      document.getElementById('txAuthor').value = tx.author || '공동';
+      
+      const parts = String(tx.date).split('T')[0].split('-');
+      if (parts.length === 3) {
+        setDateWheelValues(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+      }
+
+      document.getElementById('txMainCategory').value = tx.main_category || '';
+      handleMainCategoryChange();
+      document.getElementById('txSubCategory').value = tx.sub_category || '';
+
+      document.getElementById('txTitle').value = tx.title || '';
+      document.getElementById('txAmount').value = tx.amount || '';
+      document.getElementById('txPayment').value = tx.payment || payments[0];
+      document.getElementById('txIsRecurring').checked = !!tx.is_recurring;
+      document.getElementById('txMemo').value = tx.memo || '';
+
+      document.getElementById('inputModal').classList.add('open');
+    }
+
+    async function executeDeleteCurrentTx() {
+      if (!selectedTxForDetail) return;
+      if (!confirm(`'${selectedTxForDetail.title}' 내역을 삭제하시겠습니까?`)) return;
+      
+      const { error } = await supabaseClient.from('transactions').delete().eq('id', selectedTxForDetail.id);
+      if (error) alert('삭제 실패: ' + error.message);
+      
+      closeDetailModal();
+      await loadTransactions();
+      if (currentMainView === 'stats') renderStats();
+    }
+
+    async function saveTransaction() {
+      if (!currentHousehold) return alert('가계부 방 정보가 없습니다.');
+      const title = document.getElementById('txTitle').value.trim();
+      const amount = Number(document.getElementById('txAmount').value);
+      const date = getSelectedDateString();
+      const mainCat = document.getElementById('txMainCategory').value;
+      const subCat = document.getElementById('txSubCategory').value;
+      const payment = document.getElementById('txPayment').value;
+      const memo = document.getElementById('txMemo').value.trim();
+      const author = document.getElementById('txAuthor').value;
+      const is_recurring = document.getElementById('txIsRecurring').checked;
+
+      if (!title || !amount || !date) return alert('내용과 금액을 입력해주세요.');
+
+      lastUsedState = { flow: selectedFlowType, main: mainCat, sub: subCat, payment: payment };
+      localStorage.setItem('my_last_used_state', JSON.stringify(lastUsedState));
+      localStorage.setItem('my_ledger_author', author);
+
+      const payload = { 
+        household_id: currentHousehold.id,
+        date: date,
+        type: selectedFlowType, 
+        flow_type: selectedFlowType, 
+        main_category: mainCat, 
+        sub_category: subCat, 
+        category: `${mainCat} > ${subCat}`,
+        title: title, 
+        amount: amount, 
+        payment: payment, 
+        memo: memo, 
+        author: author, 
+        is_recurring: is_recurring 
+      };
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.innerText = editingTxId ? '수정 중...' : '저장 중...';
+      saveBtn.disabled = true;
+
+      let error;
+      if (editingTxId) {
+        const res = await supabaseClient.from('transactions').update(payload).eq('id', editingTxId);
+        error = res.error;
+      } else {
+        const res = await supabaseClient.from('transactions').insert([payload]);
+        error = res.error;
+      }
+
+      saveBtn.innerText = editingTxId ? '수정 완료' : '저장하기';
+      saveBtn.disabled = false;
+      
+      if (error) return alert('저장 실패: ' + error.message);
+
+      editingTxId = null;
+      currentYear = selectedTxDate.year;
+      currentMonth = selectedTxDate.month;
+      updateMonthText();
+      
+      closeModal();
+      document.getElementById('txTitle').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txMemo').value = '';
+
+      await loadTransactions();
+      if (currentMainView === 'stats') renderStats();
+    }
+
+    function getCategoryEmoji(main, sub, flow) {
+      if (flow === '수입' || flow === 'INCOME') return '💰';
+      if (flow === '저축' || flow === 'SAVING') return '🏦';
+      if (main === '고정비' || flow === 'FIXED') {
+        if (sub && sub.includes('대출')) return '🏠';
+        if (sub && sub.includes('통신')) return '📱';
+        if (sub && sub.includes('보험')) return '🛡️';
+        if (sub && sub.includes('구독')) return '🎬';
+        return '📅';
+      }
+      if (sub && (sub.includes('식비') || sub.includes('카페'))) return '🍽️';
+      if (sub && sub.includes('교통')) return '🚗';
+      if (sub && (sub.includes('생활') || sub.includes('육아'))) return '👶';
+      if (sub && (sub.includes('여가') || sub.includes('쇼핑'))) return '🛍️';
+      return '💸';
+    }
+
+    // --- 렌더링 ---
+    function render() {
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      const monthlyData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
+
+      let inc = 0, exp = 0, fix = 0, sav = 0;
+      monthlyData.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        const flow = t.flow_type || t.type;
+        const main = t.main_category || '';
+
+        if (flow === '수입' || flow === 'INCOME') inc += amt;
+        else if (flow === '저축' || flow === 'SAVING') sav += amt;
+        else if (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED') {
+          if (main === '고정비' || flow === 'FIXED') fix += amt;
+          else exp += amt;
+        }
+      });
+
+      document.getElementById('totalIncome').innerText = inc.toLocaleString() + '원';
+      document.getElementById('totalExpense').innerText = exp.toLocaleString() + '원';
+      document.getElementById('totalFixed').innerText = fix.toLocaleString() + '원';
+      document.getElementById('totalSaving').innerText = sav.toLocaleString() + '원';
+      
+      const net = inc - (exp + fix);
+      const netElem = document.getElementById('netBalance');
+      netElem.innerText = (net >= 0 ? '+' : '') + net.toLocaleString() + '원';
+      netElem.style.color = net >= 0 ? 'var(--text)' : 'var(--expense)';
+
+      const filtered = monthlyData.filter(t => {
+        if (activeFilterTab === 'ALL') return true;
+        const flow = t.flow_type || t.type;
+        if (activeFilterTab === '지출') return flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED';
+        if (activeFilterTab === '수입') return flow === '수입' || flow === 'INCOME';
+        if (activeFilterTab === '저축') return flow === '저축' || flow === 'SAVING';
+        return true;
+      });
+
+      const timelineContainer = document.getElementById('transactionTimeline');
+      if (filtered.length === 0) {
+        timelineContainer.innerHTML = '<div style="text-align:center; color:#94A3B8; padding: 48px 0; font-size:0.85rem;">내역이 없습니다.</div>';
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach(t => {
+        const dateKey = String(t.date).split('T')[0];
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(t);
+      });
+
+      const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+      timelineContainer.innerHTML = sortedDates.map(dateStr => {
+        const dayItems = grouped[dateStr];
+        const dt = new Date(dateStr);
+        const dayName = dayNames[dt.getDay()];
+        const dateHeaderDisplay = `${dt.getMonth() + 1}월 ${dt.getDate()}일 (${dayName})`;
+
+        let dayTotalExpense = 0;
+        dayItems.forEach(item => {
+          const flow = item.flow_type || item.type;
+          if (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED') {
+            dayTotalExpense += Number(item.amount);
+          }
+        });
+
+        const rowsHtml = dayItems.map(t => {
+          const flow = t.flow_type || t.type;
+          const isInc = (flow === '수입' || flow === 'INCOME');
+          const emoji = getCategoryEmoji(t.main_category, t.sub_category || '', flow);
+          const catLabel = t.sub_category || t.main_category || t.category || '기타';
+
+          return `
+            <div class="timeline-row" onclick='openDetailModal(${JSON.stringify(t)})'>
+              <div class="t-row-left">
+                <div class="t-icon-box">${emoji}</div>
+                <div class="t-info">
+                  <div class="t-title">${t.title}</div>
+                  <div class="t-sub">
+                    <span>${catLabel}</span>
+                    <span>·</span>
+                    <span>${t.payment || '기타'}</span>
+                    ${t.is_recurring ? `<span class="t-badge-repeat">마스터</span>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="t-row-right">
+                <div class="t-amount ${isInc ? 'text-income' : 'text-expense'}">
+                  ${isInc ? '+' : '-'}${Number(t.amount).toLocaleString()}원
+                </div>
+                <div class="t-author">${t.author || '공동'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="date-group">
+            <div class="date-group-header">
+              <span>${dateHeaderDisplay}</span>
+              ${dayTotalExpense > 0 ? `<span>지출 ${dayTotalExpense.toLocaleString()}원</span>` : ''}
+            </div>
+            <div class="date-group-box">
+              ${rowsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const chartPalette = [
+      '#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444',
+      '#8B5CF6', '#EC4899', '#3B82F6', '#64748B', '#14B8A6'
+    ];
+
+    function renderStats() {
+      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      const monthlyExpenses = transactions.filter(t => {
+        if (!t.date) return false;
+        const isThisMonth = String(t.date).startsWith(targetPrefix);
+        const flow = t.flow_type || t.type;
+        return isThisMonth && (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
+      });
+
+      const catSums = {};
+      let totalExp = 0;
+
+      monthlyExpenses.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        const key = t.sub_category || t.main_category || t.category || '기타';
+        catSums[key] = (catSums[key] || 0) + amt;
+        totalExp += amt;
+      });
+
+      const labels = Object.keys(catSums);
+      const dataValues = labels.map(k => catSums[k]);
+
+      const canvas = document.getElementById('expenseDoughnutChart');
+      const noChartText = document.getElementById('noChartText');
+      const breakdownList = document.getElementById('statsBreakdownList');
+
+      if (totalExp === 0 || labels.length === 0) {
+        canvas.style.display = 'none';
+        noChartText.style.display = 'block';
+        breakdownList.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px 0; font-size:0.8rem;">지출 데이터가 없습니다.</div>';
+        if (doughnutChartInstance) doughnutChartInstance.destroy();
+        return;
+      }
+
+      canvas.style.display = 'block';
+      noChartText.style.display = 'none';
+
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+      doughnutChartInstance = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: chartPalette.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '65%'
+        }
+      });
+
+      const sortedEntries = Object.entries(catSums).sort((a, b) => b[1] - a[1]);
+      breakdownList.innerHTML = sortedEntries.map(([cat, amt], idx) => {
+        const color = chartPalette[idx % chartPalette.length];
+        const pct = ((amt / totalExp) * 100).toFixed(1);
+        return `
+          <div class="stats-item-row">
+            <div class="stats-dot-title">
+              <span class="dot" style="background-color: ${color};"></span>
+              <span>${cat}</span>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:0.88rem; font-weight:700;">${amt.toLocaleString()}원</span>
+              <span style="font-size:0.72rem; color:var(--subtext); margin-left:4px;">(${pct}%)</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- 설정 메뉴 카테고리/결제수단 관리 ---
     function renderSettings() {
       const targetMainSelect = document.getElementById('targetMainCatSelect');
       let options = [];
@@ -1040,480 +1802,6 @@
 
     function openSettingsModal() { renderSettings(); document.getElementById('settingsModal').classList.add('open'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
-    
-    function openModal() { 
-      editingTxId = null;
-      document.getElementById('modalTitleText').innerText = '가계부 등록';
-      document.getElementById('saveBtn').innerText = '저장하기';
-      document.getElementById('txTitle').value = '';
-      document.getElementById('txAmount').value = '';
-      document.getElementById('txMemo').value = '';
-      applyLastUsedFlowType();
-      setDateWheelValues(currentYear, currentMonth, today.getDate());
-      document.getElementById('datePanel').classList.remove('open');
-      document.getElementById('inputModal').classList.add('open'); 
-    }
-    function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
-
-    function openDetailModal(tx) {
-      selectedTxForDetail = tx;
-      const flow = tx.flow_type || tx.type;
-      const isInc = (flow === '수입' || flow === 'INCOME');
-      
-      document.getElementById('detailTitle').innerText = tx.title;
-      const amtElem = document.getElementById('detailAmount');
-      amtElem.innerText = `${isInc ? '+' : '-'}${Number(tx.amount).toLocaleString()}원`;
-      amtElem.style.color = isInc ? 'var(--income)' : 'var(--expense)';
-      
-      document.getElementById('detailDate').innerText = tx.date;
-      document.getElementById('detailCategory').innerText = tx.main_category ? `${tx.main_category} > ${tx.sub_category}` : (tx.category || '-');
-      document.getElementById('detailPayment').innerText = tx.payment || '-';
-      document.getElementById('detailAuthor').innerText = tx.author || '공동';
-      
-      const memoRow = document.getElementById('detailMemoRow');
-      if (tx.memo) {
-        memoRow.style.display = 'block';
-        document.getElementById('detailMemo').innerText = tx.memo;
-      } else {
-        memoRow.style.display = 'none';
-      }
-
-      document.getElementById('detailModal').classList.add('open');
-    }
-
-    function closeDetailModal() {
-      document.getElementById('detailModal').classList.remove('open');
-      selectedTxForDetail = null;
-    }
-
-    function openEditModalFromDetail() {
-      if (!selectedTxForDetail) return;
-      const tx = selectedTxForDetail;
-      closeDetailModal();
-
-      editingTxId = tx.id;
-      document.getElementById('modalTitleText').innerText = '가계부 수정';
-      document.getElementById('saveBtn').innerText = '수정 완료';
-
-      selectedFlowType = tx.flow_type || tx.type || '지출';
-      applyLastUsedFlowType();
-
-      document.getElementById('txAuthor').value = tx.author || '공동';
-      
-      const parts = String(tx.date).split('T')[0].split('-');
-      if (parts.length === 3) {
-        setDateWheelValues(Number(parts[0]), Number(parts[1]), Number(parts[2]));
-      }
-
-      document.getElementById('txMainCategory').value = tx.main_category || '';
-      handleMainCategoryChange();
-      document.getElementById('txSubCategory').value = tx.sub_category || '';
-
-      document.getElementById('txTitle').value = tx.title || '';
-      document.getElementById('txAmount').value = tx.amount || '';
-      document.getElementById('txPayment').value = tx.payment || payments[0];
-      document.getElementById('txIsRecurring').checked = !!tx.is_recurring;
-      document.getElementById('txMemo').value = tx.memo || '';
-
-      document.getElementById('inputModal').classList.add('open');
-    }
-
-    async function executeDeleteCurrentTx() {
-      if (!selectedTxForDetail) return;
-      if (!confirm(`'${selectedTxForDetail.title}' 내역을 삭제하시겠습니까?`)) return;
-      
-      const { error } = await supabaseClient.from('transactions').delete().eq('id', selectedTxForDetail.id);
-      if (error) alert('삭제 실패: ' + error.message);
-      
-      closeDetailModal();
-      await loadTransactions();
-      if (currentMainView === 'stats') renderStats();
-    }
-
-    async function loadTransactions() {
-      if (isFetching || !currentHousehold) return;
-      isFetching = true;
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('transactions')
-          .select('*')
-          .eq('household_id', currentHousehold.id)
-          .order('date', { ascending: false });
-        
-        if (!error && Array.isArray(data)) {
-          transactions = data;
-        }
-      } catch (err) {
-        console.warn('DB 로드 에러:', err);
-      } finally {
-        isFetching = false;
-      }
-      
-      try {
-        await autoApplyRecurringExpenses();
-      } catch (err) {
-        console.warn('반복 건너뜀:', err);
-      }
-
-      render();
-    }
-
-    function listenRealtime() {
-      if (!currentHousehold) return;
-      supabaseClient
-        .channel(`public:transactions:${currentHousehold.id}`)
-        .on('postgres_changes', { 
-          event: '*', 
-          schema: 'public', 
-          table: 'transactions',
-          filter: `household_id=eq.${currentHousehold.id}`
-        }, () => {
-          loadTransactions();
-        })
-        .subscribe();
-    }
-
-    async function autoApplyRecurringExpenses() {
-      if (!currentHousehold) return;
-      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      
-      // 템플릿 중복 누적 방지: 제목과 금액이 같은 반복 항목은 고유 1개만 템플릿으로 취급
-      const allRecurring = transactions.filter(t => t.is_recurring === true);
-      const uniqueTemplatesMap = new Map();
-      allRecurring.forEach(t => {
-        const key = `${t.title}_${t.amount}_${t.main_category}`;
-        if (!uniqueTemplatesMap.has(key)) {
-          uniqueTemplatesMap.set(key, t);
-        }
-      });
-      const recurringTemplates = Array.from(uniqueTemplatesMap.values());
-      const currentMonthData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
-
-      const newEntries = [];
-      recurringTemplates.forEach(template => {
-        const exists = currentMonthData.some(item => item.title === template.title && Number(item.amount) === Number(template.amount));
-        if (!exists) {
-          const originalDay = String(template.date).split('-')[2] || '01';
-          newEntries.push({
-            household_id: currentHousehold.id,
-            date: `${targetPrefix}-${originalDay.slice(0,2)}`,
-            flow_type: template.flow_type || template.type,
-            type: template.flow_type || template.type,
-            main_category: template.main_category,
-            sub_category: template.sub_category,
-            category: `${template.main_category || ''} > ${template.sub_category || ''}`,
-            title: template.title,
-            amount: template.amount,
-            payment: template.payment,
-            memo: template.memo,
-            author: template.author,
-            is_recurring: true
-          });
-        }
-      });
-
-      if (newEntries.length > 0) {
-        await supabaseClient.from('transactions').insert(newEntries);
-        const { data } = await supabaseClient
-          .from('transactions')
-          .select('*')
-          .eq('household_id', currentHousehold.id)
-          .order('date', { ascending: false });
-        if (data) transactions = data;
-      }
-    }
-
-    async function changeMonth(delta) {
-      currentMonth += delta;
-      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
-      if (currentMonth < 1) { currentMonth = 12; currentYear--; }
-      updateMonthText();
-      await loadTransactions();
-      if (currentMainView === 'stats') renderStats();
-    }
-
-    function switchFilterTab(tab, e) {
-      activeFilterTab = tab;
-      document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      render();
-    }
-
-    async function saveTransaction() {
-      if (!currentHousehold) return alert('가계부 방 정보가 없습니다.');
-      const title = document.getElementById('txTitle').value.trim();
-      const amount = Number(document.getElementById('txAmount').value);
-      const date = getSelectedDateString();
-      const mainCat = document.getElementById('txMainCategory').value;
-      const subCat = document.getElementById('txSubCategory').value;
-      const payment = document.getElementById('txPayment').value;
-      const memo = document.getElementById('txMemo').value.trim();
-      const author = document.getElementById('txAuthor').value;
-      const is_recurring = document.getElementById('txIsRecurring').checked;
-
-      if (!title || !amount || !date) return alert('내용과 금액을 입력해주세요.');
-
-      lastUsedState = { flow: selectedFlowType, main: mainCat, sub: subCat, payment: payment };
-      localStorage.setItem('my_last_used_state', JSON.stringify(lastUsedState));
-      localStorage.setItem('my_ledger_author', author);
-
-      const newTx = { 
-        household_id: currentHousehold.id,
-        date: date,
-        type: selectedFlowType, 
-        flow_type: selectedFlowType, 
-        main_category: mainCat, 
-        sub_category: subCat, 
-        category: `${mainCat} > ${subCat}`,
-        title: title, 
-        amount: amount, 
-        payment: payment, 
-        memo: memo, 
-        author: author, 
-        is_recurring: is_recurring 
-      };
-
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.innerText = editingTxId ? '수정 중...' : '저장 중...';
-      saveBtn.disabled = true;
-
-      let error;
-      if (editingTxId) {
-        const res = await supabaseClient.from('transactions').update(newTx).eq('id', editingTxId);
-        error = res.error;
-      } else {
-        const res = await supabaseClient.from('transactions').insert([newTx]);
-        error = res.error;
-      }
-
-      saveBtn.innerText = editingTxId ? '수정 완료' : '저장하기';
-      saveBtn.disabled = false;
-      
-      if (error) return alert('저장 실패: ' + error.message);
-
-      editingTxId = null;
-      currentYear = selectedTxDate.year;
-      currentMonth = selectedTxDate.month;
-      updateMonthText();
-      
-      closeModal();
-      document.getElementById('txTitle').value = '';
-      document.getElementById('txAmount').value = '';
-      document.getElementById('txMemo').value = '';
-
-      await loadTransactions();
-      if (currentMainView === 'stats') renderStats();
-    }
-
-    function getCategoryEmoji(main, sub, flow) {
-      if (flow === '수입' || flow === 'INCOME') return '💰';
-      if (flow === '저축' || flow === 'SAVING') return '🏦';
-      if (main === '고정비') {
-        if (sub.includes('대출')) return '🏠';
-        if (sub.includes('통신')) return '📱';
-        if (sub.includes('보험')) return '🛡️';
-        if (sub.includes('구독')) return '🎬';
-        return '📅';
-      }
-      if (sub.includes('식비') || sub.includes('카페')) return '🍽️';
-      if (sub.includes('교통')) return '🚗';
-      if (sub.includes('생활') || sub.includes('육아')) return '👶';
-      if (sub.includes('여가') || sub.includes('쇼핑')) return '🛍️';
-      return '💸';
-    }
-
-    function render() {
-      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      const monthlyData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
-
-      let inc = 0, exp = 0, fix = 0, sav = 0;
-      monthlyData.forEach(t => {
-        const amt = Number(t.amount) || 0;
-        const flow = t.flow_type || t.type;
-        const main = t.main_category || '';
-
-        if (flow === '수입' || flow === 'INCOME') inc += amt;
-        else if (flow === '저축' || flow === 'SAVING') sav += amt;
-        else if (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED') {
-          if (main === '고정비' || flow === 'FIXED') fix += amt;
-          else exp += amt;
-        }
-      });
-
-      document.getElementById('totalIncome').innerText = inc.toLocaleString() + '원';
-      document.getElementById('totalExpense').innerText = exp.toLocaleString() + '원';
-      document.getElementById('totalFixed').innerText = fix.toLocaleString() + '원';
-      document.getElementById('totalSaving').innerText = sav.toLocaleString() + '원';
-      
-      const net = inc - (exp + fix);
-      const netElem = document.getElementById('netBalance');
-      netElem.innerText = (net >= 0 ? '+' : '') + net.toLocaleString() + '원';
-      netElem.style.color = net >= 0 ? 'var(--text)' : 'var(--expense)';
-
-      const filtered = monthlyData.filter(t => {
-        if (activeFilterTab === 'ALL') return true;
-        const flow = t.flow_type || t.type;
-        if (activeFilterTab === '지출') return flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED';
-        if (activeFilterTab === '수입') return flow === '수입' || flow === 'INCOME';
-        if (activeFilterTab === '저축') return flow === '저축' || flow === 'SAVING';
-        return true;
-      });
-
-      const timelineContainer = document.getElementById('transactionTimeline');
-      if (filtered.length === 0) {
-        timelineContainer.innerHTML = '<div style="text-align:center; color:#94A3B8; padding: 48px 0; font-size:0.85rem;">내역이 없습니다.</div>';
-        return;
-      }
-
-      const grouped = {};
-      filtered.forEach(t => {
-        const dateKey = String(t.date).split('T')[0];
-        if (!grouped[dateKey]) grouped[dateKey] = [];
-        grouped[dateKey].push(t);
-      });
-
-      const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
-
-      timelineContainer.innerHTML = sortedDates.map(dateStr => {
-        const dayItems = grouped[dateStr];
-        const dt = new Date(dateStr);
-        const dayName = dayNames[dt.getDay()];
-        const dateHeaderDisplay = `${dt.getMonth() + 1}월 ${dt.getDate()}일 (${dayName})`;
-
-        let dayTotalExpense = 0;
-        dayItems.forEach(item => {
-          const flow = item.flow_type || item.type;
-          if (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED') {
-            dayTotalExpense += Number(item.amount);
-          }
-        });
-
-        const rowsHtml = dayItems.map(t => {
-          const flow = t.flow_type || t.type;
-          const isInc = (flow === '수입' || flow === 'INCOME');
-          const emoji = getCategoryEmoji(t.main_category, t.sub_category || '', flow);
-          const catLabel = t.sub_category || t.main_category || t.category || '기타';
-
-          return `
-            <div class="timeline-row" onclick='openDetailModal(${JSON.stringify(t)})'>
-              <div class="t-row-left">
-                <div class="t-icon-box">${emoji}</div>
-                <div class="t-info">
-                  <div class="t-title">${t.title}</div>
-                  <div class="t-sub">
-                    <span>${catLabel}</span>
-                    <span>·</span>
-                    <span>${t.payment || '기타'}</span>
-                    ${t.is_recurring ? `<span class="t-badge-repeat">반복</span>` : ''}
-                  </div>
-                </div>
-              </div>
-              <div class="t-row-right">
-                <div class="t-amount ${isInc ? 'text-income' : 'text-expense'}">
-                  ${isInc ? '+' : '-'}${Number(t.amount).toLocaleString()}원
-                </div>
-                <div class="t-author">${t.author || '공동'}</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        return `
-          <div class="date-group">
-            <div class="date-group-header">
-              <span>${dateHeaderDisplay}</span>
-              ${dayTotalExpense > 0 ? `<span>지출 ${dayTotalExpense.toLocaleString()}원</span>` : ''}
-            </div>
-            <div class="date-group-box">
-              ${rowsHtml}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    const chartPalette = [
-      '#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444',
-      '#8B5CF6', '#EC4899', '#3B82F6', '#64748B', '#14B8A6'
-    ];
-
-    function renderStats() {
-      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      const monthlyExpenses = transactions.filter(t => {
-        if (!t.date) return false;
-        const isThisMonth = String(t.date).startsWith(targetPrefix);
-        const flow = t.flow_type || t.type;
-        return isThisMonth && (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
-      });
-
-      const catSums = {};
-      let totalExp = 0;
-
-      monthlyExpenses.forEach(t => {
-        const amt = Number(t.amount) || 0;
-        const key = t.sub_category || t.main_category || t.category || '기타';
-        catSums[key] = (catSums[key] || 0) + amt;
-        totalExp += amt;
-      });
-
-      const labels = Object.keys(catSums);
-      const dataValues = labels.map(k => catSums[k]);
-
-      const canvas = document.getElementById('expenseDoughnutChart');
-      const noChartText = document.getElementById('noChartText');
-      const breakdownList = document.getElementById('statsBreakdownList');
-
-      if (totalExp === 0 || labels.length === 0) {
-        canvas.style.display = 'none';
-        noChartText.style.display = 'block';
-        breakdownList.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px 0; font-size:0.8rem;">지출 데이터가 없습니다.</div>';
-        if (doughnutChartInstance) doughnutChartInstance.destroy();
-        return;
-      }
-
-      canvas.style.display = 'block';
-      noChartText.style.display = 'none';
-
-      if (doughnutChartInstance) doughnutChartInstance.destroy();
-
-      doughnutChartInstance = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: dataValues,
-            backgroundColor: chartPalette.slice(0, labels.length),
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          cutout: '65%'
-        }
-      });
-
-      const sortedEntries = Object.entries(catSums).sort((a, b) => b[1] - a[1]);
-      breakdownList.innerHTML = sortedEntries.map(([cat, amt], idx) => {
-        const color = chartPalette[idx % chartPalette.length];
-        const pct = ((amt / totalExp) * 100).toFixed(1);
-        return `
-          <div class="stats-item-row">
-            <div class="stats-dot-title">
-              <span class="dot" style="background-color: ${color};"></span>
-              <span>${cat}</span>
-            </div>
-            <div style="text-align:right;">
-              <span style="font-size:0.88rem; font-weight:700;">${amt.toLocaleString()}원</span>
-              <span style="font-size:0.72rem; color:var(--subtext); margin-left:4px;">(${pct}%)</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
 
     checkSession();
   </script>
