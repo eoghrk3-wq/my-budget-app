@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -60,7 +61,6 @@
     /* 메인 앱 스타일 */
     #appView { display: none; }
     
-    /* 컴팩트 1단 통합 헤더 */
     .top-navbar { background: var(--card); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
     .navbar-brand { font-size: 1.15rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
     .navbar-month-control { display: flex; align-items: center; gap: 6px; background: #F1F5F9; padding: 4px 10px; border-radius: 20px; }
@@ -70,7 +70,6 @@
     .code-badge-sm { font-size: 0.7rem; background: var(--primary-light); color: var(--primary); padding: 4px 8px; border-radius: 12px; font-weight: 700; cursor: pointer; }
     .btn-icon-nav { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
 
-    /* 슬림 모던 대시보드 카드 */
     .dashboard-card { background: var(--card); margin: 12px 16px 14px; padding: 18px 18px 14px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
     .dash-main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
     .dash-main-title { font-size: 0.75rem; font-weight: 600; color: var(--subtext); margin-bottom: 3px; }
@@ -81,13 +80,11 @@
     .mini-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--subtext); }
     .mini-stat-val { font-size: 0.8rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* 칩형 필터 탭 */
     .filter-pills-row { display: flex; gap: 6px; margin: 0 16px 12px; overflow-x: auto; padding-bottom: 2px; -ms-overflow-style: none; scrollbar-width: none; }
     .filter-pills-row::-webkit-scrollbar { display: none; }
     .pill-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 0.78rem; font-weight: 700; color: var(--subtext); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
     .pill-btn.active { background: var(--text); color: white; border-color: var(--text); }
 
-    /* 날짜별 타임라인 그룹 리스트 */
     .timeline-container { margin: 0 16px; }
     .date-group { margin-bottom: 16px; }
     .date-group-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px 6px; font-size: 0.75rem; font-weight: 700; color: var(--subtext); }
@@ -108,7 +105,6 @@
     .t-amount { font-size: 0.92rem; font-weight: 800; }
     .t-author { font-size: 0.68rem; color: var(--subtext); margin-top: 1px; }
 
-    /* 통계 화면 */
     #viewStats { display: none; margin: 0 16px; }
     .chart-box { background: var(--card); border-radius: 20px; padding: 20px 16px; border: 1px solid var(--border); margin-bottom: 12px; text-align: center; }
     .chart-container { position: relative; width: 210px; height: 210px; margin: 0 auto 10px; }
@@ -118,7 +114,6 @@
     .stats-dot-title { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; }
     .dot { width: 8px; height: 8px; border-radius: 50%; }
 
-    /* 일체형 하단 탭바 & 중앙 등록 버튼 */
     .dock-navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 64px; background: var(--card); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-top: 1px solid var(--border); z-index: 50; padding: 0 10px; }
     .dock-nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; font-size: 0.72rem; font-weight: 700; color: var(--subtext); cursor: pointer; gap: 2px; }
     .dock-nav-btn.active { color: var(--primary); }
@@ -126,7 +121,6 @@
     .btn-center-add { width: 48px; height: 48px; border-radius: 50%; background: var(--primary-gradient); color: white; border: none; font-size: 26px; font-weight: 300; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); cursor: pointer; transition: transform 0.1s; }
     .btn-center-add:active { transform: scale(0.94); }
 
-    /* 모달 공통 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100; align-items: flex-end; backdrop-filter: blur(2px); }
     .modal.open { display: flex; }
     .modal-content { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 22px 18px 32px; max-height: 90vh; overflow-y: auto; }
@@ -235,10 +229,8 @@
     </div>
   </div>
 
-  <!-- 3. 메인 가계부 앱 (리팩토링 레이아웃) -->
+  <!-- 3. 메인 가계부 앱 -->
   <div id="appView">
-    
-    <!-- 1단 컴팩트 헤더 -->
     <div class="top-navbar">
       <div class="navbar-brand">2gether</div>
       
@@ -254,7 +246,6 @@
       </div>
     </div>
 
-    <!-- 토스 스타일 슬림 대시보드 카드 -->
     <div class="dashboard-card">
       <div class="dash-main-header">
         <div>
@@ -282,7 +273,6 @@
       </div>
     </div>
 
-    <!-- 칩 필터 -->
     <div class="filter-pills-row">
       <button class="pill-btn active" onclick="switchFilterTab('ALL', event)">전체</button>
       <button class="pill-btn" onclick="switchFilterTab('지출', event)">지출</button>
@@ -290,12 +280,10 @@
       <button class="pill-btn" onclick="switchFilterTab('저축', event)">저축</button>
     </div>
 
-    <!-- 가계부 내역 뷰 (날짜별 그룹화 피드) -->
     <div id="viewLedger">
       <div class="timeline-container" id="transactionTimeline"></div>
     </div>
 
-    <!-- 통계 뷰 -->
     <div id="viewStats">
       <div class="chart-box">
         <div style="font-size:0.85rem; font-weight:700; margin-bottom:10px;">📊 당월 지출 비중</div>
@@ -310,7 +298,6 @@
       </div>
     </div>
 
-    <!-- 일체형 하단 탭바 -->
     <div class="dock-navbar">
       <button class="dock-nav-btn active" id="navLedgerBtn" onclick="switchMainView('ledger')">
         <span style="font-size:1.2rem;">📝</span>
@@ -328,10 +315,10 @@
     </div>
   </div>
 
-  <!-- 내역 등록 모달 -->
+  <!-- 내역 등록/수정 모달 -->
   <div class="modal" id="inputModal">
     <div class="modal-content">
-      <div class="modal-title">가계부 등록</div>
+      <div class="modal-title" id="modalTitleText">가계부 등록</div>
       
       <div class="type-selector">
         <button type="button" class="type-btn" id="flowBtn-지출" onclick="selectFlowType('지출', event)">지출</button>
@@ -405,7 +392,7 @@
     </div>
   </div>
 
-  <!-- 내역 상세 및 삭제 모달 -->
+  <!-- 내역 상세 및 수정/삭제 모달 -->
   <div class="modal" id="detailModal">
     <div class="modal-content">
       <div class="modal-title" id="detailTitle" style="font-size:1.15rem;">내역 상세</div>
@@ -419,8 +406,9 @@
           <div id="detailMemoRow">• 메모: <b id="detailMemo" style="color:var(--text);"></b></div>
         </div>
       </div>
-      <button class="btn-close" style="background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="executeDeleteCurrentTx()">이 내역 삭제하기</button>
-      <button class="btn-close" onclick="closeDetailModal()" style="margin-top:6px;">닫기</button>
+      <button class="btn-close" style="background:var(--primary); color:white; font-weight:700; margin-bottom:6px;" onclick="openEditModalFromDetail()">이 내역 수정하기</button>
+      <button class="btn-close" style="background:#FEE2E2; color:#DC2626; font-weight:700; margin-bottom:6px;" onclick="executeDeleteCurrentTx()">이 내역 삭제하기</button>
+      <button class="btn-close" onclick="closeDetailModal()">닫기</button>
     </div>
   </div>
 
@@ -475,7 +463,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '15.0';
+    const APP_VERSION = '15.1';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -494,6 +482,7 @@
     let isSignUpMode = false;
     let newlyCreatedInviteCode = '';
     let selectedTxForDetail = null;
+    let editingTxId = null;
 
     let transactions = [];
     let doughnutChartInstance = null;
@@ -1023,6 +1012,12 @@
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
     
     function openModal() { 
+      editingTxId = null;
+      document.getElementById('modalTitleText').innerText = '가계부 등록';
+      document.getElementById('saveBtn').innerText = '저장하기';
+      document.getElementById('txTitle').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txMemo').value = '';
       applyLastUsedFlowType();
       setDateWheelValues(currentYear, currentMonth, today.getDate());
       document.getElementById('datePanel').classList.remove('open');
@@ -1059,6 +1054,38 @@
     function closeDetailModal() {
       document.getElementById('detailModal').classList.remove('open');
       selectedTxForDetail = null;
+    }
+
+    function openEditModalFromDetail() {
+      if (!selectedTxForDetail) return;
+      const tx = selectedTxForDetail;
+      closeDetailModal();
+
+      editingTxId = tx.id;
+      document.getElementById('modalTitleText').innerText = '가계부 수정';
+      document.getElementById('saveBtn').innerText = '수정 완료';
+
+      selectedFlowType = tx.flow_type || tx.type || '지출';
+      applyLastUsedFlowType();
+
+      document.getElementById('txAuthor').value = tx.author || '공동';
+      
+      const parts = String(tx.date).split('T')[0].split('-');
+      if (parts.length === 3) {
+        setDateWheelValues(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+      }
+
+      document.getElementById('txMainCategory').value = tx.main_category || '';
+      handleMainCategoryChange();
+      document.getElementById('txSubCategory').value = tx.sub_category || '';
+
+      document.getElementById('txTitle').value = tx.title || '';
+      document.getElementById('txAmount').value = tx.amount || '';
+      document.getElementById('txPayment').value = tx.payment || payments[0];
+      document.getElementById('txIsRecurring').checked = !!tx.is_recurring;
+      document.getElementById('txMemo').value = tx.memo || '';
+
+      document.getElementById('inputModal').classList.add('open');
     }
 
     async function executeDeleteCurrentTx() {
@@ -1120,7 +1147,17 @@
     async function autoApplyRecurringExpenses() {
       if (!currentHousehold) return;
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      const recurringTemplates = transactions.filter(t => t.is_recurring === true);
+      
+      // [수정됨] 템플릿 중복 누적 방지: 제목과 금액이 같은 반복 항목은 고유 1개만 템플릿으로 취급
+      const allRecurring = transactions.filter(t => t.is_recurring === true);
+      const uniqueTemplatesMap = new Map();
+      allRecurring.forEach(t => {
+        const key = `${t.title}_${t.amount}_${t.main_category}`;
+        if (!uniqueTemplatesMap.has(key)) {
+          uniqueTemplatesMap.set(key, t);
+        }
+      });
+      const recurringTemplates = Array.from(uniqueTemplatesMap.values());
       const currentMonthData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
 
       const newEntries = [];
@@ -1208,15 +1245,24 @@
       };
 
       const saveBtn = document.getElementById('saveBtn');
-      saveBtn.innerText = '저장 중...';
+      saveBtn.innerText = editingTxId ? '수정 중...' : '저장 중...';
       saveBtn.disabled = true;
 
-      const { error } = await supabaseClient.from('transactions').insert([newTx]);
-      saveBtn.innerText = '저장하기';
+      let error;
+      if (editingTxId) {
+        const res = await supabaseClient.from('transactions').update(newTx).eq('id', editingTxId);
+        error = res.error;
+      } else {
+        const res = await supabaseClient.from('transactions').insert([newTx]);
+        error = res.error;
+      }
+
+      saveBtn.innerText = editingTxId ? '수정 완료' : '저장하기';
       saveBtn.disabled = false;
       
       if (error) return alert('저장 실패: ' + error.message);
 
+      editingTxId = null;
       currentYear = selectedTxDate.year;
       currentMonth = selectedTxDate.month;
       updateMonthText();
@@ -1290,7 +1336,6 @@
         return;
       }
 
-      // 날짜별 그룹핑 (내림차순)
       const grouped = {};
       filtered.forEach(t => {
         const dateKey = String(t.date).split('T')[0];
@@ -1306,7 +1351,6 @@
         const dayName = dayNames[dt.getDay()];
         const dateHeaderDisplay = `${dt.getMonth() + 1}월 ${dt.getDate()}일 (${dayName})`;
 
-        // 당일 소계
         let dayTotalExpense = 0;
         dayItems.forEach(item => {
           const flow = item.flow_type || item.type;
@@ -1445,3 +1489,5 @@
   </script>
 </body>
 </html>
+
+```
