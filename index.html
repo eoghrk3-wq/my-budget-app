@@ -350,8 +350,8 @@
         <div style="font-size:0.85rem; font-weight:800; margin-bottom:8px;" id="masterFormTitle">➕ 고정비 템플릿 추가</div>
         
         <div class="type-selector" style="margin-bottom:8px;">
-          <button type="button" class="type-btn selected" id="mFlowBtn-지출" onclick="selectMasterFlow('지출')">고정 지출</button>
-          <button type="button" class="type-btn" id="mFlowBtn-저축" onclick="selectMasterFlow('저축')">고정 저축</button>
+          <button type="button" class="type-btn selected" id="mFlowBtn-지출" onclick="selectMasterFlow('지출', true)">고정 지출</button>
+          <button type="button" class="type-btn" id="mFlowBtn-저축" onclick="selectMasterFlow('저축', true)">고정 저축</button>
         </div>
 
         <div class="category-grid" style="margin-bottom:8px;">
@@ -558,7 +558,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '16.2';
+    const APP_VERSION = '17.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -584,7 +584,7 @@
     let isFetching = false;
 
     // 고정비 마스터 상태
-    let editingMasterItem = null;
+    let editingMasterId = null;
     let selectedMasterFlow = '지출';
 
     const defaultCategories = {
@@ -638,6 +638,17 @@
     let selectedFlowType = lastUsedState.flow || '지출';
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
+
+    // HTML 이스케이프 유틸
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
     // --- 인증 & 세션 복구 ---
     async function checkSession() {
@@ -1044,10 +1055,14 @@
       closeMasterFormArea();
     }
 
-    function selectMasterFlow(flow) {
+    // [버그 1 수정] applyDefaults 플래그를 통해 수정 모드 시 카테고리 덮어쓰기 방지
+    function selectMasterFlow(flow, applyDefaults = true) {
       selectedMasterFlow = flow;
       document.getElementById('mFlowBtn-지출').classList.toggle('selected', flow === '지출');
       document.getElementById('mFlowBtn-저축').classList.toggle('selected', flow === '저축');
+      
+      if (!applyDefaults) return;
+
       if (flow === '저축') {
         document.getElementById('mMainCat').value = '저축';
         document.getElementById('mSubCat').value = '적금';
@@ -1061,7 +1076,8 @@
       const allRecurring = transactions.filter(t => t.is_recurring === true);
       const uniqueMap = new Map();
       allRecurring.forEach(t => {
-        const key = t.title.trim().toLowerCase();
+        // 복합 키로 고유 템플릿 판별
+        const key = `${t.title.trim().toLowerCase()}__${Number(t.amount)}__${t.main_category}`;
         if (!uniqueMap.has(key)) {
           uniqueMap.set(key, t);
         }
@@ -1091,6 +1107,7 @@
         return;
       }
 
+      // [버그 2 수정] onclick에 객체 대신 ID만 넘겨 따옴표 깨짐 방지
       container.innerHTML = templates.map(t => {
         const flow = t.flow_type || t.type;
         const isSaving = (flow === '저축' || flow === 'SAVING');
@@ -1102,9 +1119,9 @@
             <div class="master-card-left">
               <span style="font-size:1.3rem;">${emoji}</span>
               <div>
-                <div style="font-size:0.88rem; font-weight:800; color:var(--text);">${t.title}</div>
+                <div style="font-size:0.88rem; font-weight:800; color:var(--text);">${escapeHtml(t.title)}</div>
                 <div style="font-size:0.72rem; color:var(--subtext);">
-                  ${t.main_category || '고정비'} > ${t.sub_category || '일반'} · 매월 ${Number(day)}일 · ${t.payment || '자동이체'}
+                  ${escapeHtml(t.main_category || '고정비')} > ${escapeHtml(t.sub_category || '일반')} · 매월 ${Number(day)}일 · ${escapeHtml(t.payment || '자동이체')}
                 </div>
               </div>
             </div>
@@ -1113,8 +1130,8 @@
                 ${Number(t.amount).toLocaleString()}원
               </div>
               <div class="master-actions" style="margin-top:4px;">
-                <button class="btn-m-action" onclick='openEditFixedMaster(${JSON.stringify(t)})'>수정</button>
-                <button class="btn-m-action danger" onclick="deleteFixedMaster('${t.title.replace(/'/g, "\\'")}')">삭제</button>
+                <button class="btn-m-action" onclick="openEditFixedMasterById(${t.id})">수정</button>
+                <button class="btn-m-action danger" onclick="deleteFixedMasterById(${t.id})">삭제</button>
               </div>
             </div>
           </div>
@@ -1123,19 +1140,23 @@
     }
 
     function openNewFixedMasterForm() {
-      editingMasterItem = null;
+      editingMasterId = null;
       document.getElementById('masterFormTitle').innerText = '➕ 고정비 템플릿 추가';
       document.getElementById('mTitle').value = '';
       document.getElementById('mAmount').value = '';
       document.getElementById('mDay').value = '1';
       document.getElementById('mPayment').value = '자동이체';
       document.getElementById('mAuthor').value = '공동';
-      selectMasterFlow('지출');
+      selectMasterFlow('지출', true);
       document.getElementById('masterFormArea').style.display = 'block';
     }
 
-    function openEditFixedMaster(t) {
-      editingMasterItem = t;
+    // [버그 1, 2 수정] ID 기반 조회 및 카테고리 값 보존
+    function openEditFixedMasterById(id) {
+      const t = transactions.find(item => item.id === id);
+      if (!t) return;
+
+      editingMasterId = t.id;
       document.getElementById('masterFormTitle').innerText = '✏️ 고정비 템플릿 수정';
       document.getElementById('mTitle').value = t.title || '';
       document.getElementById('mAmount').value = t.amount || '';
@@ -1143,15 +1164,18 @@
       document.getElementById('mDay').value = Number(day);
       document.getElementById('mPayment').value = t.payment || '자동이체';
       document.getElementById('mAuthor').value = t.author || '공동';
+      
+      // 카테고리 값 보존을 위해 applyDefaults = false 로 호출
+      selectMasterFlow(t.flow_type || t.type || '지출', false);
       document.getElementById('mMainCat').value = t.main_category || '고정비';
       document.getElementById('mSubCat').value = t.sub_category || '';
-      selectMasterFlow(t.flow_type || t.type || '지출');
+
       document.getElementById('masterFormArea').style.display = 'block';
     }
 
     function closeMasterFormArea() {
       document.getElementById('masterFormArea').style.display = 'none';
-      editingMasterItem = null;
+      editingMasterId = null;
     }
 
     async function saveFixedMasterTemplate() {
@@ -1185,13 +1209,8 @@
         is_recurring: true
       };
 
-      if (editingMasterItem) {
-        await supabaseClient
-          .from('transactions')
-          .update(payload)
-          .eq('household_id', currentHousehold.id)
-          .eq('is_recurring', true)
-          .eq('title', editingMasterItem.title);
+      if (editingMasterId) {
+        await supabaseClient.from('transactions').update(payload).eq('id', editingMasterId);
       } else {
         await supabaseClient.from('transactions').insert([payload]);
       }
@@ -1202,15 +1221,15 @@
       alert('고정비 마스터 정보가 안전하게 저장되었습니다.');
     }
 
-    async function deleteFixedMaster(title) {
-      if (!confirm(`고정비 템플릿 '${title}'을(를) 마스터에서 삭제하시겠습니까?\n(마스터에서 삭제하면 다음 달부터 자동 생성되지 않습니다.)`)) return;
+    async function deleteFixedMasterById(id) {
+      const t = transactions.find(item => item.id === id);
+      if (!t) return;
+      if (!confirm(`고정비 템플릿 '${t.title}'을(를) 마스터에서 삭제하시겠습니까?\n(마스터에서 삭제하면 다음 달부터 자동 생성되지 않습니다.)`)) return;
       
       await supabaseClient
         .from('transactions')
         .delete()
-        .eq('household_id', currentHousehold.id)
-        .eq('is_recurring', true)
-        .eq('title', title);
+        .eq('id', id);
 
       await loadTransactions();
       renderFixedMasterList();
@@ -1222,26 +1241,26 @@
       alert(`${currentYear}년 ${currentMonth}월 고정비가 동기화되었습니다!`);
     }
 
-    // --- 중복 제거 및 고정비 자동 생성 로직 ---
+    // [버그 3 수정] 마스터 템플릿(is_recurring = true)에 한해서만 중복 정리 수행 (일반 거래 삭제 원천 방지)
     async function cleanupDuplicateTransactions() {
       if (!currentHousehold || transactions.length === 0) return;
       const seen = new Set();
-      const duplicateIds = [];
+      const duplicateMasterIds = [];
 
-      transactions.forEach(t => {
-        if (!t.date || !t.title) return;
-        const dStr = String(t.date).split('T')[0];
-        const key = `${t.household_id}_${dStr}_${t.title.trim()}_${Number(t.amount)}_${t.is_recurring ? 'REC' : 'NORM'}`;
-        if (seen.has(key)) {
-          duplicateIds.push(t.id);
-        } else {
-          seen.add(key);
-        }
-      });
+      transactions
+        .filter(t => t.is_recurring === true)
+        .forEach(t => {
+          const key = `${t.household_id}_${t.title.trim().toLowerCase()}__${Number(t.amount)}__${t.main_category}`;
+          if (seen.has(key)) {
+            duplicateMasterIds.push(t.id);
+          } else {
+            seen.add(key);
+          }
+        });
 
-      if (duplicateIds.length > 0) {
-        await supabaseClient.from('transactions').delete().in('id', duplicateIds);
-        transactions = transactions.filter(t => !duplicateIds.includes(t.id));
+      if (duplicateMasterIds.length > 0) {
+        await supabaseClient.from('transactions').delete().in('id', duplicateMasterIds);
+        transactions = transactions.filter(t => !duplicateMasterIds.includes(t.id));
       }
     }
 
@@ -1254,9 +1273,9 @@
 
       const newEntries = [];
       recurringTemplates.forEach(template => {
+        // 이미 생성된 내역 여부 확인 (제목 일치 검사)
         const exists = currentMonthData.some(item => 
-          item.title.trim() === template.title.trim() && 
-          Number(item.amount) === Number(template.amount)
+          item.title.trim() === template.title.trim()
         );
 
         if (!exists) {
@@ -1276,7 +1295,7 @@
             payment: template.payment,
             memo: template.memo || '고정비 자동반영',
             author: template.author,
-            is_recurring: false
+            is_recurring: false // 당월 생성 거래는 false로 격리
           });
         }
       });
@@ -1367,6 +1386,13 @@
     }
     
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
+
+    // [버그 2 수정] ID 기반 상세 열기
+    function openDetailModalById(id) {
+      const tx = transactions.find(item => item.id === id);
+      if (!tx) return;
+      openDetailModal(tx);
+    }
 
     function openDetailModal(tx) {
       selectedTxForDetail = tx;
@@ -1599,15 +1625,15 @@
           const isFixedItem = (t.main_category === '고정비' || t.memo === '고정비 자동반영');
 
           return `
-            <div class="timeline-row" onclick='openDetailModal(${JSON.stringify(t)})'>
+            <div class="timeline-row" onclick="openDetailModalById(${t.id})">
               <div class="t-row-left">
                 <div class="t-icon-box">${emoji}</div>
                 <div class="t-info">
-                  <div class="t-title">${t.title}</div>
+                  <div class="t-title">${escapeHtml(t.title)}</div>
                   <div class="t-sub">
-                    <span>${catLabel}</span>
+                    <span>${escapeHtml(catLabel)}</span>
                     <span>·</span>
-                    <span>${t.payment || '기타'}</span>
+                    <span>${escapeHtml(t.payment || '기타')}</span>
                     ${isFixedItem ? `<span class="t-badge-repeat">고정비</span>` : ''}
                   </div>
                 </div>
@@ -1616,7 +1642,7 @@
                 <div class="t-amount ${isInc ? 'text-income' : 'text-expense'}">
                   ${isInc ? '+' : '-'}${Number(t.amount).toLocaleString()}원
                 </div>
-                <div class="t-author">${t.author || '공동'}</div>
+                <div class="t-author">${escapeHtml(t.author || '공동')}</div>
               </div>
             </div>
           `;
@@ -1707,7 +1733,7 @@
           <div class="stats-item-row">
             <div class="stats-dot-title">
               <span class="dot" style="background-color: ${color};"></span>
-              <span>${cat}</span>
+              <span>${escapeHtml(cat)}</span>
             </div>
             <div style="text-align:right;">
               <span style="font-size:0.88rem; font-weight:700;">${amt.toLocaleString()}원</span>
@@ -1734,11 +1760,11 @@
         treeHtml += `<div class="tree-box"><div class="tree-header" style="color:var(--primary);">📁 [${flow}]</div>`;
         Object.keys(categoryStructure[flow]).forEach(main => {
           treeHtml += `<div style="margin: 6px 0 2px; font-size:0.78rem; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
-            <span>↳ ${main}</span>
+            <span>↳ ${escapeHtml(main)}</span>
             <button class="btn-del-main" onclick="removeMainCategory('${flow}', '${main}')">대분류 삭제</button>
           </div><div class="chip-container sub-chip-container" data-flow="${flow}" data-main="${main}">`;
           (categoryStructure[flow][main] || []).forEach(sub => {
-            treeHtml += `<div class="chip" data-id="${sub}"><span class="chip-handle">⠿</span><span>${sub}</span><button class="chip-remove" onclick="removeSubCategory('${flow}', '${main}', '${sub}')">×</button></div>`;
+            treeHtml += `<div class="chip" data-id="${sub}"><span class="chip-handle">⠿</span><span>${escapeHtml(sub)}</span><button class="chip-remove" onclick="removeSubCategory('${flow}', '${main}', '${sub}')">×</button></div>`;
           });
           treeHtml += `</div>`;
         });
@@ -1748,7 +1774,7 @@
 
       const payContainer = document.getElementById('paymentChips');
       payContainer.innerHTML = payments.map((p, i) => `
-        <div class="chip" data-id="${p}"><span class="chip-handle">⠿</span><span>${p}</span><button class="chip-remove" onclick="removePayment(${i})">×</button></div>
+        <div class="chip" data-id="${p}"><span class="chip-handle">⠿</span><span>${escapeHtml(p)}</span><button class="chip-remove" onclick="removePayment(${i})">×</button></div>
       `).join('');
 
       initDragAndDrop();
