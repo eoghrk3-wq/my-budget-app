@@ -16,10 +16,10 @@
       --primary-hover: #4338CA;
       --primary-light: #EEF2FF;
       --primary-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-      --income: #10B981;
-      --expense: #EF4444;
-      --fixed: #F59E0B;
-      --saving: #3B82F6;
+      --income: #059669;
+      --expense: #DC2626;
+      --fixed: #D97706;
+      --saving: #2563EB;
       --bg: #F8FAFC;
       --card: #FFFFFF;
       --text: #0F172A;
@@ -27,142 +27,144 @@
       --border: #E2E8F0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, "Malgun Gothic", sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
 
-    /* 프리미엄 온보딩 & 인증 스타일 */
+    /* 인증 & 온보딩 */
     .auth-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px 16px; }
-    .auth-card { width: 100%; max-width: 400px; background: var(--card); border-radius: 28px; padding: 36px 24px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8); }
+    .auth-card { width: 100%; max-width: 400px; background: var(--card); border-radius: 28px; padding: 36px 24px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.08); border: 1px solid var(--border); }
+    .brand-hero { text-align: center; margin-bottom: 24px; }
+    .brand-icon-box { width: 60px; height: 60px; background: var(--primary-gradient); border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 18px -4px rgba(79, 70, 229, 0.4); margin-bottom: 12px; }
+    .brand-title { font-size: 1.7rem; font-weight: 900; letter-spacing: -0.5px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+    .brand-tagline { font-size: 0.85rem; color: var(--subtext); font-weight: 500; }
+
+    .auth-toggle-bar { display: flex; background: #F1F5F9; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+    .auth-toggle-btn { flex: 1; padding: 9px 0; border: none; background: transparent; font-size: 0.85rem; font-weight: 700; color: var(--subtext); border-radius: 9px; cursor: pointer; transition: all 0.2s; }
+    .auth-toggle-btn.active { background: white; color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+    .input-field-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .app-input { width: 100%; padding: 13px 15px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 0.92rem; font-weight: 500; outline: none; background: #F8FAFC; transition: all 0.2s; color: var(--text); }
+    .app-input:focus { border-color: var(--primary); background: #FFFFFF; box-shadow: 0 0 0 3px var(--primary-light); }
+
+    .btn-gradient-primary { width: 100%; padding: 14px; background: var(--primary-gradient); color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3); }
     
-    .brand-hero { text-align: center; margin-bottom: 28px; }
-    .brand-icon-box { width: 64px; height: 64px; background: var(--primary-gradient); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4); margin-bottom: 14px; }
-    .brand-title { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
-    .brand-tagline { font-size: 0.88rem; color: var(--subtext); font-weight: 500; }
-
-    .auth-toggle-bar { display: flex; background: #F1F5F9; border-radius: 14px; padding: 4px; margin-bottom: 24px; }
-    .auth-toggle-btn { flex: 1; padding: 10px 0; border: none; background: transparent; font-size: 0.88rem; font-weight: 700; color: var(--subtext); border-radius: 11px; cursor: pointer; transition: all 0.2s ease; }
-    .auth-toggle-btn.active { background: white; color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-
-    .input-field-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-    .floating-input-box { position: relative; }
-    .app-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 14px; font-size: 0.95rem; font-weight: 500; outline: none; background: #F8FAFC; transition: all 0.2s; color: var(--text); }
-    .app-input:focus { border-color: var(--primary); background: #FFFFFF; box-shadow: 0 0 0 4px var(--primary-light); }
-    .app-input::placeholder { color: #94A3B8; font-weight: 400; }
-
-    .btn-gradient-primary { width: 100%; padding: 15px; background: var(--primary-gradient); color: white; border: none; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.35); transition: opacity 0.2s, transform 0.1s; }
-    .btn-gradient-primary:active { transform: scale(0.98); opacity: 0.95; }
-
-    /* 페어링 온보딩 카드 스타일 */
-    .pairing-card-grid { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
-    .pair-choice-card { border: 2px solid var(--border); border-radius: 20px; padding: 20px 18px; cursor: pointer; text-align: left; transition: all 0.2s; background: white; display: flex; align-items: center; gap: 16px; }
+    .pairing-card-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+    .pair-choice-card { border: 1.5px solid var(--border); border-radius: 18px; padding: 18px 16px; cursor: pointer; background: white; display: flex; align-items: center; gap: 14px; transition: all 0.2s; }
     .pair-choice-card:hover, .pair-choice-card.selected { border-color: var(--primary); background: var(--primary-light); }
-    .card-emoji-box { width: 48px; height: 48px; border-radius: 14px; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-    .pair-choice-card.selected .card-emoji-box { background: white; }
-    .card-text-box h3 { font-size: 0.98rem; font-weight: 800; color: var(--text); margin-bottom: 3px; }
-    .card-text-box p { font-size: 0.78rem; color: var(--subtext); line-height: 1.35; }
+    .card-emoji-box { width: 44px; height: 44px; border-radius: 12px; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .card-text-box h3 { font-size: 0.95rem; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .card-text-box p { font-size: 0.75rem; color: var(--subtext); }
 
-    .invite-share-box { background: var(--primary-light); border-radius: 18px; padding: 20px 16px; text-align: center; margin-top: 18px; }
-    .invite-code-pill { font-size: 1.6rem; font-weight: 900; letter-spacing: 4px; color: var(--primary); padding: 10px 16px; background: white; border-radius: 12px; display: inline-block; margin: 10px 0 14px; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.1); border: 1px dashed var(--primary); }
+    .invite-share-box { background: var(--primary-light); border-radius: 16px; padding: 18px 14px; text-align: center; margin-top: 16px; }
+    .invite-code-pill { font-size: 1.5rem; font-weight: 900; letter-spacing: 4px; color: var(--primary); padding: 8px 14px; background: white; border-radius: 10px; display: inline-block; margin: 8px 0 12px; border: 1px dashed var(--primary); }
 
     /* 메인 앱 스타일 */
     #appView { display: none; }
-    .header { background: var(--card); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F3F4F6; position: sticky; top: 0; z-index: 10; }
-    .header-left { display: flex; align-items: center; gap: 8px; }
-    .header h1 { font-size: 1.25rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
-    .header-code { font-size: 0.72rem; background: var(--primary-light); color: var(--primary); padding: 4px 8px; border-radius: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 3px; }
-    .btn-settings { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: var(--subtext); }
+    
+    /* 컴팩트 1단 통합 헤더 */
+    .top-navbar { background: var(--card); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
+    .navbar-brand { font-size: 1.15rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+    .navbar-month-control { display: flex; align-items: center; gap: 6px; background: #F1F5F9; padding: 4px 10px; border-radius: 20px; }
+    .nav-arrow-btn { background: none; border: none; font-size: 0.8rem; color: var(--subtext); cursor: pointer; padding: 2px 4px; }
+    .nav-month-text { font-size: 0.88rem; font-weight: 800; color: var(--text); }
+    .navbar-actions { display: flex; align-items: center; gap: 6px; }
+    .code-badge-sm { font-size: 0.7rem; background: var(--primary-light); color: var(--primary); padding: 4px 8px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .btn-icon-nav { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
 
-    .month-bar { background: var(--card); padding: 10px 18px 14px; display: flex; justify-content: center; align-items: center; gap: 18px; border-bottom: 1px solid #E5E7EB; }
-    .month-title { font-size: 1.1rem; font-weight: 800; color: var(--text); min-width: 120px; text-align: center; }
-    .month-btn { background: #F3F4F6; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 0.9rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .month-btn:active { background: #E5E7EB; }
+    /* 슬림 모던 대시보드 카드 */
+    .dashboard-card { background: var(--card); margin: 12px 16px 14px; padding: 18px 18px 14px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    .dash-main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .dash-main-title { font-size: 0.75rem; font-weight: 600; color: var(--subtext); margin-bottom: 3px; }
+    .dash-main-amount { font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; }
+    
+    .dash-mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; border-top: 1px solid #F1F5F9; padding-top: 12px; text-align: center; }
+    .mini-stat { display: flex; flex-direction: column; gap: 2px; }
+    .mini-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--subtext); }
+    .mini-stat-val { font-size: 0.8rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .summary-card { background: var(--card); margin: 14px 16px; padding: 18px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #F1F5F9; }
-    .balance-title { font-size: 0.75rem; color: var(--subtext); margin-bottom: 2px; }
-    .balance-amount { font-size: 1.6rem; font-weight: 800; margin-bottom: 14px; }
-    .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #F1F5F9; padding-top: 12px; }
-    .stat-item { display: flex; flex-direction: column; }
-    .stat-label { font-size: 0.72rem; color: var(--subtext); margin-bottom: 2px; }
-    .stat-val { font-size: 0.95rem; font-weight: 700; }
-    .text-income { color: var(--income); }
-    .text-expense { color: var(--expense); }
-    .text-fixed { color: var(--fixed); }
-    .text-saving { color: var(--saving); }
+    /* 칩형 필터 탭 */
+    .filter-pills-row { display: flex; gap: 6px; margin: 0 16px 12px; overflow-x: auto; padding-bottom: 2px; -ms-overflow-style: none; scrollbar-width: none; }
+    .filter-pills-row::-webkit-scrollbar { display: none; }
+    .pill-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 0.78rem; font-weight: 700; color: var(--subtext); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+    .pill-btn.active { background: var(--text); color: white; border-color: var(--text); }
 
-    .tabs { display: flex; background: var(--card); margin: 0 16px 12px; border-radius: 14px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #F1F5F9; }
-    .tab { flex: 1; text-align: center; padding: 9px 0; font-size: 0.8rem; font-weight: 700; color: var(--subtext); border: none; background: none; cursor: pointer; border-radius: 10px; }
-    .tab.active { background: var(--primary); color: white; }
+    /* 날짜별 타임라인 그룹 리스트 */
+    .timeline-container { margin: 0 16px; }
+    .date-group { margin-bottom: 16px; }
+    .date-group-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px 6px; font-size: 0.75rem; font-weight: 700; color: var(--subtext); }
+    .date-group-box { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; }
+    
+    .timeline-row { padding: 13px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F1F5F9; cursor: pointer; transition: background 0.1s; }
+    .timeline-row:last-child { border-bottom: none; }
+    .timeline-row:active { background: #F8FAFC; }
 
-    .list-container { margin: 0 16px; }
-    .item-card { background: var(--card); padding: 14px 16px; border-radius: 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); border: 1px solid #F8FAFC; }
-    .item-left { display: flex; flex-direction: column; gap: 4px; max-width: 68%; }
-    .item-title { font-weight: 700; font-size: 0.92rem; word-break: break-all; }
-    .item-meta { font-size: 0.72rem; color: var(--subtext); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-    .tag { background: #EEF2FF; color: var(--primary); padding: 2px 6px; border-radius: 6px; font-weight: 600; font-size: 0.65rem; }
-    .tag-repeat { background: #FEE2E2; color: #DC2626; padding: 2px 6px; border-radius: 6px; font-weight: 600; font-size: 0.65rem; }
-    .tag-author { background: #FEF3C7; color: #B45309; padding: 2px 6px; border-radius: 6px; font-weight: 600; font-size: 0.65rem; }
-    .item-right { text-align: right; }
-    .item-amount { font-weight: 800; font-size: 0.95rem; }
-    .item-delete { background: none; border: none; color: #94A3B8; font-size: 0.72rem; margin-top: 4px; cursor: pointer; }
+    .t-row-left { display: flex; align-items: center; gap: 10px; max-width: 68%; }
+    .t-icon-box { width: 34px; height: 34px; border-radius: 10px; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .t-info { display: flex; flex-direction: column; gap: 2px; }
+    .t-title { font-size: 0.88rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .t-sub { font-size: 0.72rem; color: var(--subtext); display: flex; align-items: center; gap: 4px; }
+    .t-badge-repeat { font-size: 0.62rem; color: #DC2626; background: #FEE2E2; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
 
+    .t-row-right { text-align: right; }
+    .t-amount { font-size: 0.92rem; font-weight: 800; }
+    .t-author { font-size: 0.68rem; color: var(--subtext); margin-top: 1px; }
+
+    /* 통계 화면 */
     #viewStats { display: none; margin: 0 16px; }
-    .chart-box { background: var(--card); border-radius: 20px; padding: 20px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 14px; text-align: center; }
-    .chart-container { position: relative; width: 220px; height: 220px; margin: 0 auto 12px; }
-    .stats-breakdown-card { background: var(--card); border-radius: 20px; padding: 18px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .stats-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #F1F5F9; }
-    .stats-row:last-child { border-bottom: none; }
-    .stats-label-group { display: flex; align-items: center; gap: 8px; }
-    .color-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .stats-name { font-size: 0.85rem; font-weight: 600; }
-    .stats-val-group { text-align: right; }
-    .stats-amount { font-size: 0.88rem; font-weight: 700; }
-    .stats-pct { font-size: 0.72rem; color: var(--subtext); }
+    .chart-box { background: var(--card); border-radius: 20px; padding: 20px 16px; border: 1px solid var(--border); margin-bottom: 12px; text-align: center; }
+    .chart-container { position: relative; width: 210px; height: 210px; margin: 0 auto 10px; }
+    .stats-card { background: var(--card); border-radius: 20px; padding: 16px; border: 1px solid var(--border); }
+    .stats-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F1F5F9; }
+    .stats-item-row:last-child { border-bottom: none; }
+    .stats-dot-title { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 62px; background: var(--card); display: flex; border-top: 1px solid #E2E8F0; z-index: 50; }
-    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; font-size: 0.72rem; font-weight: 600; color: var(--subtext); cursor: pointer; }
-    .nav-btn.active { color: var(--primary); font-weight: 700; }
-    .nav-icon { font-size: 1.3rem; margin-bottom: 2px; }
+    /* 일체형 하단 탭바 & 중앙 등록 버튼 */
+    .dock-navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 64px; background: var(--card); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-top: 1px solid var(--border); z-index: 50; padding: 0 10px; }
+    .dock-nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; font-size: 0.72rem; font-weight: 700; color: var(--subtext); cursor: pointer; gap: 2px; }
+    .dock-nav-btn.active { color: var(--primary); }
+    .dock-center-wrap { display: flex; justify-content: center; align-items: center; padding: 0 10px; }
+    .btn-center-add { width: 48px; height: 48px; border-radius: 50%; background: var(--primary-gradient); color: white; border: none; font-size: 26px; font-weight: 300; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); cursor: pointer; transition: transform 0.1s; }
+    .btn-center-add:active { transform: scale(0.94); }
 
-    .fab { position: fixed; bottom: 76px; right: 20px; width: 56px; height: 56px; background: var(--primary-gradient); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 40; }
-
+    /* 모달 공통 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100; align-items: flex-end; backdrop-filter: blur(2px); }
     .modal.open { display: flex; }
     .modal-content { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 22px 18px 32px; max-height: 90vh; overflow-y: auto; }
-    .modal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; }
+    .modal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 14px; }
     .form-group { margin-bottom: 12px; }
-    .form-label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--subtext); margin-bottom: 5px; }
-    .form-input, select { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.92rem; outline: none; background: white; }
+    .form-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--subtext); margin-bottom: 4px; }
+    .form-input, select { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.92rem; outline: none; background: white; }
 
-    .custom-date-btn { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.92rem; font-weight: 600; text-align: left; background: #FFFFFF; color: var(--text); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .custom-date-btn { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.9rem; font-weight: 600; text-align: left; background: #FFFFFF; color: var(--text); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .date-panel { display: none; background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-top: 6px; }
     .date-panel.open { display: block; }
     .date-picker-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
     .date-quick-btns { display: flex; gap: 6px; }
-    .btn-quick { flex: 1; padding: 7px; font-size: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: 600; color: var(--subtext); }
+    .btn-quick { flex: 1; padding: 6px; font-size: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: 600; color: var(--subtext); }
 
-    .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 12px 0 16px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
-    .btn-submit { width: 100%; background: var(--primary-gradient); color: white; border: none; padding: 13px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
-    .btn-close { width: 100%; background: #F1F5F9; color: var(--subtext); border: none; padding: 11px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
+    .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .btn-submit { width: 100%; background: var(--primary-gradient); color: white; border: none; padding: 13px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px; }
+    .btn-close { width: 100%; background: #F1F5F9; color: var(--subtext); border: none; padding: 10px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 6px; }
     
-    .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+    .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
     .type-btn { padding: 9px 0; border: 1.5px solid var(--border); border-radius: 10px; background: white; font-size: 0.85rem; font-weight: 700; cursor: pointer; text-align: center; color: var(--subtext); }
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    .tree-box { background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-    .tree-header { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; min-height: 36px; padding: 4px 0; }
-    .chip { display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; user-select: none; touch-action: none; }
-    .chip-handle { color: #94A3B8; cursor: grab; font-size: 0.9rem; }
-    .chip-handle:active { cursor: grabbing; }
-    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.95rem; padding-left: 2px; }
-    .btn-del-main { background: none; border: none; color: #EF4444; font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px; }
+    .tree-box { background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .tree-header { font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid var(--border); padding: 5px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; }
+    .chip-handle { color: #94A3B8; cursor: grab; font-size: 0.85rem; }
+    .chip-remove { border: none; background: none; color: #EF4444; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+    .btn-del-main { background: none; border: none; color: #EF4444; font-size: 0.7rem; font-weight: 600; cursor: pointer; }
     .add-row { display: flex; gap: 6px; margin-top: 6px; }
-    .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <!-- 1. 리디자인된 인증/로그인 화면 -->
+  <!-- 1. 인증/로그인 -->
   <div class="auth-wrapper" id="viewAuth">
     <div class="auth-card">
       <div class="brand-hero">
@@ -177,13 +179,9 @@
       </div>
 
       <div class="input-field-group">
-        <div class="floating-input-box">
-          <input type="email" id="authEmail" class="app-input" placeholder="이메일 주소" />
-        </div>
-        <div class="floating-input-box">
-          <input type="password" id="authPassword" class="app-input" placeholder="비밀번호 (6자 이상)" />
-        </div>
-        <div class="floating-input-box" id="nicknameBox" style="display:none;">
+        <input type="email" id="authEmail" class="app-input" placeholder="이메일 주소" />
+        <input type="password" id="authPassword" class="app-input" placeholder="비밀번호 (6자 이상)" />
+        <div id="nicknameBox" style="display:none;">
           <input type="text" id="authNickname" class="app-input" placeholder="내 별칭 (예: 남편, 아내)" />
         </div>
       </div>
@@ -192,7 +190,7 @@
     </div>
   </div>
 
-  <!-- 2. 리디자인된 부부 매칭 온보딩 화면 -->
+  <!-- 2. 부부 온보딩 -->
   <div class="auth-wrapper" id="viewOnboarding" style="display:none;">
     <div class="auth-card">
       <div class="brand-hero">
@@ -206,7 +204,7 @@
           <div class="card-emoji-box">🏠</div>
           <div class="card-text-box">
             <h3>우리가 처음 시작해요</h3>
-            <p>새 가계부를 만들고 배우자를 초대할 코드를 생성합니다.</p>
+            <p>새 가계부를 만들고 초대 코드를 생성합니다.</p>
           </div>
         </div>
 
@@ -214,102 +212,123 @@
           <div class="card-emoji-box">🔗</div>
           <div class="card-text-box">
             <h3>초대 코드를 받았어요</h3>
-            <p>배우자에게 전달받은 6자리 코드를 입력하여 연결합니다.</p>
+            <p>배우자에게 전달받은 코드를 입력합니다.</p>
           </div>
         </div>
       </div>
 
-      <!-- 초대 코드 입력창 (참여 시) -->
       <div id="joinInputArea" style="display:none; margin-top:16px;">
-        <div class="floating-input-box">
-          <input type="text" id="joinInviteCode" class="app-input" placeholder="초대 코드 입력 (예: 2G-XXXX)" style="text-transform:uppercase; text-align:center; font-weight:800; font-size:1.1rem; letter-spacing:3px;" />
-        </div>
+        <input type="text" id="joinInviteCode" class="app-input" placeholder="초대 코드 입력 (예: 2G-XXXX)" style="text-transform:uppercase; text-align:center; font-weight:800; font-size:1.1rem; letter-spacing:3px;" />
         <button class="btn-gradient-primary" style="margin-top:10px;" onclick="joinHousehold()">연결 완료하고 시작하기</button>
         <button class="btn-close" style="margin-top:8px;" onclick="hideJoinHouseholdInput()">이전으로</button>
       </div>
 
-      <!-- 초대장 공유 카드 (방 생성 직후) -->
       <div id="shareInviteArea" style="display:none;" class="invite-share-box">
         <div style="font-size:0.85rem; font-weight:700; color:var(--text);">🎉 가계부 방이 생성되었습니다!</div>
         <div class="invite-code-pill" id="newlyCreatedCode">2G-XXXX</div>
-        <p style="font-size:0.78rem; color:var(--subtext); margin-bottom:14px; line-height:1.4;">
-          배우자에게 이 코드를 전달해 주세요.<br>배우자가 가입 후 코드를 입력하면 즉시 동기화됩니다.
+        <p style="font-size:0.75rem; color:var(--subtext); margin-bottom:12px; line-height:1.4;">
+          배우자에게 이 코드를 전달해 주세요.<br>배우자가 가입 후 입력하면 즉시 동기화됩니다.
         </p>
-        <button class="btn-gradient-primary" onclick="shareInviteCodeNative()">💌 배우자에게 초대장 보내기</button>
+        <button class="btn-gradient-primary" onclick="shareInviteCodeNative()">💌 초대장 공유하기</button>
         <button class="btn-close" style="margin-top:8px;" onclick="checkSession()">가계부로 이동하기</button>
       </div>
     </div>
   </div>
 
-  <!-- 3. 메인 가계부 앱 화면 -->
+  <!-- 3. 메인 가계부 앱 (리팩토링 레이아웃) -->
   <div id="appView">
-    <div class="header">
-      <div class="header-left">
-        <h1>2gether</h1>
-        <span class="header-code" id="displayInviteCode" onclick="copyInviteCode()" title="클릭하여 코드 복사">🔗 코드 복사</span>
+    
+    <!-- 1단 컴팩트 헤더 -->
+    <div class="top-navbar">
+      <div class="navbar-brand">2gether</div>
+      
+      <div class="navbar-month-control">
+        <button class="nav-arrow-btn" onclick="changeMonth(-1)">◀</button>
+        <span class="nav-month-text" id="currentMonthText">2026년 8월</span>
+        <button class="nav-arrow-btn" onclick="changeMonth(1)">▶</button>
       </div>
-      <div class="header-actions">
-        <button class="btn-settings" onclick="openSettingsModal()" title="설정">⚙️</button>
-      </div>
-    </div>
 
-    <!-- 월 선택 바 -->
-    <div class="month-bar">
-      <button class="month-btn" onclick="changeMonth(-1)">◀</button>
-      <span class="month-title" id="currentMonthText">2026년 8월</span>
-      <button class="month-btn" onclick="changeMonth(1)">▶</button>
-    </div>
-
-    <div class="summary-card">
-      <div class="balance-title">이번 달 잔여 (수입 - 총지출)</div>
-      <div class="balance-amount" id="netBalance">0원</div>
-      <div class="grid-stats">
-        <div class="stat-item"><span class="stat-label">총 수입</span><span class="stat-val text-income" id="totalIncome">0원</span></div>
-        <div class="stat-item"><span class="stat-label">변동 소비</span><span class="stat-val text-expense" id="totalExpense">0원</span></div>
-        <div class="stat-item"><span class="stat-label">고정비</span><span class="stat-val text-fixed" id="totalFixed">0원</span></div>
-        <div class="stat-item"><span class="stat-label">저축 / 투자</span><span class="stat-val text-saving" id="totalSaving">0원</span></div>
+      <div class="navbar-actions">
+        <span class="code-badge-sm" id="displayInviteCode" onclick="copyInviteCode()" title="초대 코드 복사">🔗 코드</span>
+        <button class="btn-icon-nav" onclick="openSettingsModal()" title="설정">⚙️</button>
       </div>
     </div>
 
+    <!-- 토스 스타일 슬림 대시보드 카드 -->
+    <div class="dashboard-card">
+      <div class="dash-main-header">
+        <div>
+          <div class="dash-main-title">이번 달 잔여 자산</div>
+          <div class="dash-main-amount" id="netBalance">0원</div>
+        </div>
+      </div>
+      <div class="dash-mini-grid">
+        <div class="mini-stat">
+          <span class="mini-stat-label">총 수입</span>
+          <span class="mini-stat-val text-income" id="totalIncome">0</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-label">변동 소비</span>
+          <span class="mini-stat-val text-expense" id="totalExpense">0</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-label">고정비</span>
+          <span class="mini-stat-val text-fixed" id="totalFixed">0</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-label">저축 / 투자</span>
+          <span class="mini-stat-val text-saving" id="totalSaving">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 칩 필터 -->
+    <div class="filter-pills-row">
+      <button class="pill-btn active" onclick="switchFilterTab('ALL', event)">전체</button>
+      <button class="pill-btn" onclick="switchFilterTab('지출', event)">지출</button>
+      <button class="pill-btn" onclick="switchFilterTab('수입', event)">수입</button>
+      <button class="pill-btn" onclick="switchFilterTab('저축', event)">저축</button>
+    </div>
+
+    <!-- 가계부 내역 뷰 (날짜별 그룹화 피드) -->
     <div id="viewLedger">
-      <div class="tabs">
-        <button class="tab active" onclick="switchFilterTab('ALL', event)">전체</button>
-        <button class="tab" onclick="switchFilterTab('지출', event)">지출</button>
-        <button class="tab" onclick="switchFilterTab('수입', event)">수입</button>
-        <button class="tab" onclick="switchFilterTab('저축', event)">저축</button>
-      </div>
-      <div class="list-container" id="transactionList"></div>
+      <div class="timeline-container" id="transactionTimeline"></div>
     </div>
 
+    <!-- 통계 뷰 -->
     <div id="viewStats">
       <div class="chart-box">
-        <div style="font-size:0.9rem; font-weight:700; margin-bottom:12px;">📊 당월 지출 비중 (도넛 차트)</div>
+        <div style="font-size:0.85rem; font-weight:700; margin-bottom:10px;">📊 당월 지출 비중</div>
         <div class="chart-container">
           <canvas id="expenseDoughnutChart"></canvas>
         </div>
-        <div id="noChartText" style="display:none; color:#94A3B8; font-size:0.85rem; padding:30px 0;">지출 내역이 없습니다.</div>
+        <div id="noChartText" style="display:none; color:#94A3B8; font-size:0.8rem; padding:20px 0;">지출 데이터가 없습니다.</div>
       </div>
-      <div class="stats-breakdown-card">
-        <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--text);">카테고리별 상세 지출</div>
+      <div class="stats-card">
+        <div style="font-size:0.82rem; font-weight:700; margin-bottom:6px;">카테고리별 상세 지출</div>
         <div id="statsBreakdownList"></div>
       </div>
     </div>
 
-    <button class="fab" onclick="openModal()">+</button>
-
-    <div class="bottom-nav">
-      <button class="nav-btn active" id="navLedgerBtn" onclick="switchMainView('ledger')">
-        <span class="nav-icon">📝</span>
+    <!-- 일체형 하단 탭바 -->
+    <div class="dock-navbar">
+      <button class="dock-nav-btn active" id="navLedgerBtn" onclick="switchMainView('ledger')">
+        <span style="font-size:1.2rem;">📝</span>
         <span>내역</span>
       </button>
-      <button class="nav-btn" id="navStatsBtn" onclick="switchMainView('stats')">
-        <span class="nav-icon">📊</span>
+
+      <div class="dock-center-wrap">
+        <button class="btn-center-add" onclick="openModal()" title="새 내역 등록">+</button>
+      </div>
+
+      <button class="dock-nav-btn" id="navStatsBtn" onclick="switchMainView('stats')">
+        <span style="font-size:1.2rem;">📊</span>
         <span>통계</span>
       </button>
     </div>
   </div>
 
-  <!-- 가계부 등록 모달 -->
+  <!-- 내역 등록 모달 -->
   <div class="modal" id="inputModal">
     <div class="modal-content">
       <div class="modal-title">가계부 등록</div>
@@ -328,7 +347,7 @@
       <div class="form-group">
         <label class="form-label">날짜</label>
         <button type="button" class="custom-date-btn" onclick="toggleDatePanel()">
-          <span id="selectedDateDisplay">2026년 8월 26일 (수)</span>
+          <span id="selectedDateDisplay">2026년 8월 31일 (월)</span>
           <span>📅</span>
         </button>
         <div class="date-panel" id="datePanel">
@@ -358,7 +377,7 @@
 
       <div class="form-group">
         <label class="form-label">내용 / 지출처</label>
-        <input type="text" id="txTitle" class="form-input" placeholder="예: 마트 장보기, 배달음식, 관리비 등" />
+        <input type="text" id="txTitle" class="form-input" placeholder="예: 이마트 장보기, 점심식사" />
       </div>
 
       <div class="form-group">
@@ -378,11 +397,30 @@
 
       <div class="form-group">
         <label class="form-label">메모 (선택)</label>
-        <input type="text" id="txMemo" class="form-input" placeholder="예: 3개월 할부, 비고 등" />
+        <input type="text" id="txMemo" class="form-input" placeholder="비고 입력" />
       </div>
 
       <button class="btn-submit" id="saveBtn" onclick="saveTransaction()">저장하기</button>
       <button class="btn-close" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <!-- 내역 상세 및 삭제 모달 -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-title" id="detailTitle" style="font-size:1.15rem;">내역 상세</div>
+      <div style="background:#F8FAFC; border-radius:14px; padding:16px; margin-bottom:14px; border:1px solid var(--border);">
+        <div style="font-size:1.4rem; font-weight:900; margin-bottom:10px;" id="detailAmount">0원</div>
+        <div style="font-size:0.8rem; color:var(--subtext); display:flex; flex-direction:column; gap:6px;">
+          <div>• 날짜: <b id="detailDate" style="color:var(--text);"></b></div>
+          <div>• 분류: <b id="detailCategory" style="color:var(--text);"></b></div>
+          <div>• 결제수단: <b id="detailPayment" style="color:var(--text);"></b></div>
+          <div>• 작성자: <b id="detailAuthor" style="color:var(--text);"></b></div>
+          <div id="detailMemoRow">• 메모: <b id="detailMemo" style="color:var(--text);"></b></div>
+        </div>
+      </div>
+      <button class="btn-close" style="background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="executeDeleteCurrentTx()">이 내역 삭제하기</button>
+      <button class="btn-close" onclick="closeDetailModal()" style="margin-top:6px;">닫기</button>
     </div>
   </div>
 
@@ -394,7 +432,7 @@
       <div class="tree-box">
         <div class="tree-header">💑 커플 연결 정보</div>
         <div style="font-size:0.8rem; color:var(--subtext); margin-bottom:8px;">초대 코드: <b id="settingsInviteCodeText" style="color:var(--primary);"></b></div>
-        <button class="btn-quick" style="width:100%; padding:9px; font-weight:700;" onclick="copyInviteCode()">초대 코드 복사하여 배우자에게 공유</button>
+        <button class="btn-quick" style="width:100%; padding:9px; font-weight:700;" onclick="copyInviteCode()">초대 코드 복사</button>
       </div>
 
       <div class="tree-box">
@@ -405,7 +443,7 @@
             <option value="수입">수입</option>
             <option value="저축">저축</option>
           </select>
-          <input type="text" id="newMainCatInput" class="form-input" style="flex:2;" placeholder="대분류명 (예: 여가)" />
+          <input type="text" id="newMainCatInput" class="form-input" style="flex:2;" placeholder="대분류명" />
           <button class="btn-add" onclick="addMainCategory()">추가</button>
         </div>
       </div>
@@ -414,19 +452,19 @@
         <div class="tree-header">➕ 새 중분류 추가</div>
         <div class="add-row">
           <select id="targetMainCatSelect" class="form-input" style="flex:1;"></select>
-          <input type="text" id="newSubCatInput" class="form-input" style="flex:2;" placeholder="중분류명 (예: 캠핑)" />
+          <input type="text" id="newSubCatInput" class="form-input" style="flex:2;" placeholder="중분류명" />
           <button class="btn-add" onclick="addSubCategory()">추가</button>
         </div>
       </div>
 
-      <div class="form-label" style="margin-top:14px;">현재 분류 목록 (드래그 정렬 / 삭제)</div>
+      <div class="form-label" style="margin-top:12px;">분류 목록 관리</div>
       <div id="categoryTreeDisplay"></div>
 
-      <hr style="border:none; border-top:1px solid #E2E8F0; margin:16px 0;" />
+      <hr style="border:none; border-top:1px solid var(--border); margin:14px 0;" />
 
-      <div class="form-label">결제수단 / 계좌 관리 (드래그 정렬 / 삭제)</div>
+      <div class="form-label">결제수단 관리</div>
       <div class="add-row">
-        <input type="text" id="newPaymentInput" class="form-input" placeholder="새 결제수단 (예: 토스뱅크)" />
+        <input type="text" id="newPaymentInput" class="form-input" placeholder="새 결제수단" />
         <button class="btn-add" onclick="addPayment()">추가</button>
       </div>
       <div class="chip-container" id="paymentChips" style="margin-top:8px;"></div>
@@ -437,17 +475,25 @@
   </div>
 
   <script>
-    const APP_VERSION = '14.0';
+    const APP_VERSION = '15.0';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage
+      }
+    });
 
     let currentUser = null;
     let currentHousehold = null;
     let isSignUpMode = false;
     let newlyCreatedInviteCode = '';
+    let selectedTxForDetail = null;
 
     let transactions = [];
     let doughnutChartInstance = null;
@@ -464,7 +510,7 @@
         "투자": ["국내주식", "해외주식", "ETF", "코인"]
       },
       "지출": {
-        "고정비": ["대출상환", "통신비", "관리비", "보험료", "구독료"],
+        "고정비": ["대출", "통신", "관리비", "보험", "구독", "이체"],
         "소비": ["식비", "생활(육아)", "교통", "건강", "여가", "경조사", "기타"]
       }
     };
@@ -480,7 +526,7 @@
     }
 
     let payments = JSON.parse(localStorage.getItem('my_ledger_payments')) || [
-      '삼성카드', '국민카드', '신한카드', '신한은행', '우리은행', '토스뱅크', '현금/이체'
+      '계좌이체', '자동이체', '신용카드', '체크카드', '삼성카드', '국민카드', '신한카드', '현금/기타'
     ];
     let authors = ['남편', '아내', '공동'];
 
@@ -505,54 +551,64 @@
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
-    // --- 인증 및 온보딩 로직 ---
+    // --- 인증 & 온보딩 ---
     async function checkSession() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
-        showView('auth');
-        return;
-      }
-      currentUser = session.user;
-      
-      let { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .maybeSingle();
-
-      if (!profile) {
-        const { data: newProfile } = await supabaseClient
+      try {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (error || !session) {
+          showView('auth');
+          return;
+        }
+        currentUser = session.user;
+        
+        let { data: profile } = await supabaseClient
           .from('profiles')
-          .upsert([{ 
-            id: currentUser.id, 
-            email: currentUser.email, 
-            nickname: '사용자' 
-          }])
-          .select()
-          .single();
-        profile = newProfile;
-      }
-
-      if (!profile || !profile.household_id) {
-        showView('onboarding');
-      } else {
-        const { data: household } = await supabaseClient
-          .from('households')
           .select('*')
-          .eq('id', profile.household_id)
+          .eq('id', currentUser.id)
           .maybeSingle();
 
-        if (household) {
-          currentHousehold = household;
-          document.getElementById('displayInviteCode').innerText = `🔗 ${currentHousehold.invite_code}`;
-          document.getElementById('settingsInviteCodeText').innerText = currentHousehold.invite_code;
-          showView('app');
-          await initApp();
-        } else {
-          showView('onboarding');
+        if (!profile) {
+          const { data: newProfile } = await supabaseClient
+            .from('profiles')
+            .upsert([{ id: currentUser.id, email: currentUser.email, nickname: '사용자' }])
+            .select()
+            .single();
+          profile = newProfile;
         }
+
+        if (!profile || !profile.household_id) {
+          showView('onboarding');
+        } else {
+          const { data: household } = await supabaseClient
+            .from('households')
+            .select('*')
+            .eq('id', profile.household_id)
+            .maybeSingle();
+
+          if (household) {
+            currentHousehold = household;
+            document.getElementById('displayInviteCode').innerText = `🔗 ${currentHousehold.invite_code}`;
+            document.getElementById('settingsInviteCodeText').innerText = currentHousehold.invite_code;
+            showView('app');
+            await initApp();
+          } else {
+            showView('onboarding');
+          }
+        }
+      } catch (err) {
+        showView('auth');
       }
     }
+
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !currentUser && session) {
+        await checkSession();
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        currentHousehold = null;
+        showView('auth');
+      }
+    });
 
     function showView(view) {
       document.getElementById('viewAuth').style.display = view === 'auth' ? 'flex' : 'none';
@@ -584,36 +640,22 @@
           const { data, error } = await supabaseClient.auth.signUp({ 
             email, 
             password,
-            options: {
-              emailRedirectTo: window.location.origin + window.location.pathname
-            }
+            options: { emailRedirectTo: window.location.origin + window.location.pathname }
           });
-          
           if (error) throw error;
 
           if (data.user) {
-            await supabaseClient.from('profiles').upsert([{ 
-              id: data.user.id, 
-              email: email, 
-              nickname: nickname || '사용자' 
-            }]);
-
+            await supabaseClient.from('profiles').upsert([{ id: data.user.id, email: email, nickname: nickname || '사용자' }]);
             if (!data.session) {
               alert(`[${email}] 주소로 인증 메일이 발송되었습니다.\n메일함에서 인증 링크를 클릭한 뒤 로그인해 주세요.`);
               setAuthMode(false);
               return;
             }
-
             await checkSession();
           }
         } else {
-          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-          if (error) {
-            if (error.message.includes('Email not confirmed')) {
-              throw new Error('이메일 인증이 완료되지 않았습니다. 메일함을 확인해 주세요.');
-            }
-            throw error;
-          }
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
           await checkSession();
         }
       } catch (err) {
@@ -647,16 +689,7 @@
 
       if (error) return alert('방 생성 실패: ' + error.message);
 
-      const { error: profError } = await supabaseClient
-        .from('profiles')
-        .upsert([{ 
-          id: currentUser.id, 
-          email: currentUser.email, 
-          household_id: household.id 
-        }]);
-
-      if (profError) return alert('프로필 연동 실패: ' + profError.message);
-
+      await supabaseClient.from('profiles').upsert([{ id: currentUser.id, email: currentUser.email, household_id: household.id }]);
       newlyCreatedInviteCode = code;
       document.getElementById('newlyCreatedCode').innerText = code;
       document.getElementById('pairingOptions').style.display = 'none';
@@ -683,29 +716,17 @@
         .eq('invite_code', code)
         .maybeSingle();
 
-      if (error || !household) return alert('존재하지 않는 초대 코드입니다. 코드를 확인해 주세요.');
+      if (error || !household) return alert('존재하지 않는 초대 코드입니다.');
 
-      const { error: profError } = await supabaseClient
-        .from('profiles')
-        .upsert([{ 
-          id: currentUser.id, 
-          email: currentUser.email, 
-          household_id: household.id 
-        }]);
-
-      if (profError) return alert('연결 실패: ' + profError.message);
-
+      await supabaseClient.from('profiles').upsert([{ id: currentUser.id, email: currentUser.email, household_id: household.id }]);
       alert('2gether 가계부 매칭이 완료되었습니다!');
       await checkSession();
     }
 
     function shareInviteCodeNative() {
-      const text = `[2gether] 우리 둘만의 공유 가계부 초대장입니다!\n초대 코드: ${newlyCreatedInviteCode}\n가입 후 코드를 입력해 주세요.`;
+      const text = `[2gether] 우리 둘만의 가계부 초대장입니다!\n초대 코드: ${newlyCreatedInviteCode}\n가입 후 코드를 입력하세요.`;
       if (navigator.share) {
-        navigator.share({
-          title: '2gether 가계부 초대',
-          text: text
-        }).catch(() => {});
+        navigator.share({ title: '2gether 가계부 초대', text: text }).catch(() => {});
       } else {
         copyInviteCode(newlyCreatedInviteCode);
       }
@@ -737,12 +758,10 @@
     function initDateWheel() {
       const ySel = document.getElementById('selYear');
       const mSel = document.getElementById('selMonth');
-      
       const years = [];
       for (let y = currentYear - 3; y <= currentYear + 2; y++) years.push(y);
       ySel.innerHTML = years.map(y => `<option value="${y}">${y}년</option>`).join('');
       mSel.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}월</option>`).join('');
-
       setDateWheelValues(selectedTxDate.year, selectedTxDate.month, selectedTxDate.day);
     }
 
@@ -777,9 +796,7 @@
         `${selectedTxDate.year}년 ${selectedTxDate.month}월 ${selectedTxDate.day}일 (${dayOfWeek})`;
     }
 
-    function toggleDatePanel() {
-      document.getElementById('datePanel').classList.toggle('open');
-    }
+    function toggleDatePanel() { document.getElementById('datePanel').classList.toggle('open'); }
 
     function setQuickDate(offsetDays) {
       const target = new Date();
@@ -793,14 +810,6 @@
       const m = String(selectedTxDate.month).padStart(2, '0');
       const d = String(selectedTxDate.day).padStart(2, '0');
       return `${y}-${m}-${d}`;
-    }
-
-    function formatKoreanDate(dateVal) {
-      if (!dateVal) return '';
-      const clean = String(dateVal).split('T')[0];
-      const parts = clean.split('-');
-      if (parts.length >= 3) return `${Number(parts[1])}월 ${Number(parts[2])}일`;
-      return dateVal;
     }
 
     function switchMainView(view) {
@@ -878,7 +887,6 @@
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
       if (e && e.target) e.target.classList.add('selected');
       renderMainCategories();
-      
       const mainCat = document.getElementById('txMainCategory').value;
       document.getElementById('txIsRecurring').checked = (mainCat === '고정비' || type === '저축');
     }
@@ -897,7 +905,7 @@
       Object.keys(categoryStructure).forEach(flow => {
         treeHtml += `<div class="tree-box"><div class="tree-header" style="color:var(--primary);">📁 [${flow}]</div>`;
         Object.keys(categoryStructure[flow]).forEach(main => {
-          treeHtml += `<div style="margin: 8px 0 3px; font-size:0.82rem; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
+          treeHtml += `<div style="margin: 6px 0 2px; font-size:0.78rem; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
             <span>↳ ${main}</span>
             <button class="btn-del-main" onclick="removeMainCategory('${flow}', '${main}')">대분류 삭제</button>
           </div><div class="chip-container sub-chip-container" data-flow="${flow}" data-main="${main}">`;
@@ -962,7 +970,7 @@
     }
 
     function removeMainCategory(flow, main) {
-      if (confirm(`'${main}' 대분류와 하위 중분류를 모두 삭제하시겠습니까?`)) {
+      if (confirm(`'${main}' 대분류를 삭제하시겠습니까?`)) {
         delete categoryStructure[flow][main];
         saveCategoryTree();
       }
@@ -1021,6 +1029,49 @@
       document.getElementById('inputModal').classList.add('open'); 
     }
     function closeModal() { document.getElementById('inputModal').classList.remove('open'); }
+
+    function openDetailModal(tx) {
+      selectedTxForDetail = tx;
+      const flow = tx.flow_type || tx.type;
+      const isInc = (flow === '수입' || flow === 'INCOME');
+      
+      document.getElementById('detailTitle').innerText = tx.title;
+      const amtElem = document.getElementById('detailAmount');
+      amtElem.innerText = `${isInc ? '+' : '-'}${Number(tx.amount).toLocaleString()}원`;
+      amtElem.style.color = isInc ? 'var(--income)' : 'var(--expense)';
+      
+      document.getElementById('detailDate').innerText = tx.date;
+      document.getElementById('detailCategory').innerText = tx.main_category ? `${tx.main_category} > ${tx.sub_category}` : (tx.category || '-');
+      document.getElementById('detailPayment').innerText = tx.payment || '-';
+      document.getElementById('detailAuthor').innerText = tx.author || '공동';
+      
+      const memoRow = document.getElementById('detailMemoRow');
+      if (tx.memo) {
+        memoRow.style.display = 'block';
+        document.getElementById('detailMemo').innerText = tx.memo;
+      } else {
+        memoRow.style.display = 'none';
+      }
+
+      document.getElementById('detailModal').classList.add('open');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.remove('open');
+      selectedTxForDetail = null;
+    }
+
+    async function executeDeleteCurrentTx() {
+      if (!selectedTxForDetail) return;
+      if (!confirm(`'${selectedTxForDetail.title}' 내역을 삭제하시겠습니까?`)) return;
+      
+      const { error } = await supabaseClient.from('transactions').delete().eq('id', selectedTxForDetail.id);
+      if (error) alert('삭제 실패: ' + error.message);
+      
+      closeDetailModal();
+      await loadTransactions();
+      if (currentMainView === 'stats') renderStats();
+    }
 
     async function loadTransactions() {
       if (isFetching || !currentHousehold) return;
@@ -1117,7 +1168,7 @@
 
     function switchFilterTab(tab, e) {
       activeFilterTab = tab;
-      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
       e.target.classList.add('active');
       render();
     }
@@ -1134,17 +1185,9 @@
       const author = document.getElementById('txAuthor').value;
       const is_recurring = document.getElementById('txIsRecurring').checked;
 
-      if (!title || !amount || !date) {
-        alert('내용과 금액을 입력해주세요.');
-        return;
-      }
+      if (!title || !amount || !date) return alert('내용과 금액을 입력해주세요.');
 
-      lastUsedState = {
-        flow: selectedFlowType,
-        main: mainCat,
-        sub: subCat,
-        payment: payment
-      };
+      lastUsedState = { flow: selectedFlowType, main: mainCat, sub: subCat, payment: payment };
       localStorage.setItem('my_last_used_state', JSON.stringify(lastUsedState));
       localStorage.setItem('my_ledger_author', author);
 
@@ -1168,14 +1211,11 @@
       saveBtn.innerText = '저장 중...';
       saveBtn.disabled = true;
 
-      const { data, error } = await supabaseClient.from('transactions').insert([newTx]).select();
+      const { error } = await supabaseClient.from('transactions').insert([newTx]);
       saveBtn.innerText = '저장하기';
       saveBtn.disabled = false;
       
-      if (error) { 
-        alert('저장 실패: ' + error.message); 
-        return; 
-      }
+      if (error) return alert('저장 실패: ' + error.message);
 
       currentYear = selectedTxDate.year;
       currentMonth = selectedTxDate.month;
@@ -1190,21 +1230,26 @@
       if (currentMainView === 'stats') renderStats();
     }
 
-    async function deleteTransaction(id) {
-      if (!confirm('내역을 삭제하시겠습니까?')) return;
-      const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
-      if (error) alert('삭제 실패: ' + error.message);
-      await loadTransactions();
-      if (currentMainView === 'stats') renderStats();
+    function getCategoryEmoji(main, sub, flow) {
+      if (flow === '수입' || flow === 'INCOME') return '💰';
+      if (flow === '저축' || flow === 'SAVING') return '🏦';
+      if (main === '고정비') {
+        if (sub.includes('대출')) return '🏠';
+        if (sub.includes('통신')) return '📱';
+        if (sub.includes('보험')) return '🛡️';
+        if (sub.includes('구독')) return '🎬';
+        return '📅';
+      }
+      if (sub.includes('식비') || sub.includes('카페')) return '🍽️';
+      if (sub.includes('교통')) return '🚗';
+      if (sub.includes('생활') || sub.includes('육아')) return '👶';
+      if (sub.includes('여가') || sub.includes('쇼핑')) return '🛍️';
+      return '💸';
     }
 
     function render() {
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      
-      const monthlyData = transactions.filter(t => {
-        if (!t.date) return false;
-        return String(t.date).startsWith(targetPrefix);
-      });
+      const monthlyData = transactions.filter(t => t.date && String(t.date).startsWith(targetPrefix));
 
       let inc = 0, exp = 0, fix = 0, sav = 0;
       monthlyData.forEach(t => {
@@ -1239,36 +1284,75 @@
         return true;
       });
 
-      const listContainer = document.getElementById('transactionList');
+      const timelineContainer = document.getElementById('transactionTimeline');
       if (filtered.length === 0) {
-        listContainer.innerHTML = '<div style="text-align:center; color:#94A3B8; padding: 40px 0;">등록된 내역이 없습니다.</div>';
+        timelineContainer.innerHTML = '<div style="text-align:center; color:#94A3B8; padding: 48px 0; font-size:0.85rem;">내역이 없습니다.</div>';
         return;
       }
 
-      listContainer.innerHTML = filtered.map(t => {
-        const flow = t.flow_type || t.type;
-        const isInc = (flow === '수입' || flow === 'INCOME');
-        const catLabel = t.main_category ? `${t.main_category} > ${t.sub_category}` : (t.category || '기타');
-        const dateDisplay = formatKoreanDate(t.date);
+      // 날짜별 그룹핑 (내림차순)
+      const grouped = {};
+      filtered.forEach(t => {
+        const dateKey = String(t.date).split('T')[0];
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(t);
+      });
 
-        return `
-          <div class="item-card">
-            <div class="item-left">
-              <div class="item-title">${t.title}</div>
-              <div class="item-meta">
-                <span>${dateDisplay}</span>
-                <span class="tag">${catLabel}</span>
-                ${t.is_recurring ? `<span class="tag-repeat">반복</span>` : ''}
-                <span class="tag-author">${t.author || '공동'}</span>
-                <span>${t.payment || ''}</span>
-                ${t.memo ? `<span>• ${t.memo}</span>` : ''}
+      const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+      timelineContainer.innerHTML = sortedDates.map(dateStr => {
+        const dayItems = grouped[dateStr];
+        const dt = new Date(dateStr);
+        const dayName = dayNames[dt.getDay()];
+        const dateHeaderDisplay = `${dt.getMonth() + 1}월 ${dt.getDate()}일 (${dayName})`;
+
+        // 당일 소계
+        let dayTotalExpense = 0;
+        dayItems.forEach(item => {
+          const flow = item.flow_type || item.type;
+          if (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED') {
+            dayTotalExpense += Number(item.amount);
+          }
+        });
+
+        const rowsHtml = dayItems.map(t => {
+          const flow = t.flow_type || t.type;
+          const isInc = (flow === '수입' || flow === 'INCOME');
+          const emoji = getCategoryEmoji(t.main_category, t.sub_category || '', flow);
+          const catLabel = t.sub_category || t.main_category || t.category || '기타';
+
+          return `
+            <div class="timeline-row" onclick='openDetailModal(${JSON.stringify(t)})'>
+              <div class="t-row-left">
+                <div class="t-icon-box">${emoji}</div>
+                <div class="t-info">
+                  <div class="t-title">${t.title}</div>
+                  <div class="t-sub">
+                    <span>${catLabel}</span>
+                    <span>·</span>
+                    <span>${t.payment || '기타'}</span>
+                    ${t.is_recurring ? `<span class="t-badge-repeat">반복</span>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="t-row-right">
+                <div class="t-amount ${isInc ? 'text-income' : 'text-expense'}">
+                  ${isInc ? '+' : '-'}${Number(t.amount).toLocaleString()}원
+                </div>
+                <div class="t-author">${t.author || '공동'}</div>
               </div>
             </div>
-            <div class="item-right">
-              <div class="item-amount ${isInc ? 'text-income' : 'text-expense'}">
-                ${isInc ? '+' : '-'}${Number(t.amount).toLocaleString()}원
-              </div>
-              <button class="item-delete" onclick="deleteTransaction(${t.id})">삭제</button>
+          `;
+        }).join('');
+
+        return `
+          <div class="date-group">
+            <div class="date-group-header">
+              <span>${dateHeaderDisplay}</span>
+              ${dayTotalExpense > 0 ? `<span>지출 ${dayTotalExpense.toLocaleString()}원</span>` : ''}
+            </div>
+            <div class="date-group-box">
+              ${rowsHtml}
             </div>
           </div>
         `;
@@ -1276,8 +1360,8 @@
     }
 
     const chartPalette = [
-      '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-      '#FF9F40', '#E7E9ED', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'
+      '#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444',
+      '#8B5CF6', '#EC4899', '#3B82F6', '#64748B', '#14B8A6'
     ];
 
     function renderStats() {
@@ -1286,8 +1370,7 @@
         if (!t.date) return false;
         const isThisMonth = String(t.date).startsWith(targetPrefix);
         const flow = t.flow_type || t.type;
-        const isExpense = (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
-        return isThisMonth && isExpense;
+        return isThisMonth && (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
       });
 
       const catSums = {};
@@ -1334,10 +1417,8 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          cutout: '62%'
+          plugins: { legend: { display: false } },
+          cutout: '65%'
         }
       });
 
@@ -1346,14 +1427,14 @@
         const color = chartPalette[idx % chartPalette.length];
         const pct = ((amt / totalExp) * 100).toFixed(1);
         return `
-          <div class="stats-row">
-            <div class="stats-label-group">
-              <span class="color-dot" style="background-color: ${color};"></span>
-              <span class="stats-name">${cat}</span>
+          <div class="stats-item-row">
+            <div class="stats-dot-title">
+              <span class="dot" style="background-color: ${color};"></span>
+              <span>${cat}</span>
             </div>
-            <div class="stats-val-group">
-              <div class="stats-amount">${amt.toLocaleString()}원</div>
-              <div class="stats-pct">${pct}%</div>
+            <div style="text-align:right;">
+              <span style="font-size:0.88rem; font-weight:700;">${amt.toLocaleString()}원</span>
+              <span style="font-size:0.72rem; color:var(--subtext); margin-left:4px;">(${pct}%)</span>
             </div>
           </div>
         `;
