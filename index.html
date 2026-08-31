@@ -222,7 +222,7 @@
 
       <div id="joinInputArea" style="display:none; margin-top:16px;">
         <input type="text" id="joinInviteCode" class="app-input" placeholder="초대 코드 입력 (예: 2G-XXXX)" style="text-transform:uppercase; text-align:center; font-weight:800; font-size:1.1rem; letter-spacing:3px;" />
-        <button class="btn-gradient-primary" style="margin-top:10px;" onclick="joinHousehold()">연결 완료하고 시작하기</button>
+        <button class="btn-gradient-primary" style="margin-top:10px;" id="joinSubmitBtn" onclick="joinHousehold()">연결 완료하고 시작하기</button>
         <button class="btn-close" style="margin-top:8px;" onclick="hideJoinHouseholdInput()">이전으로</button>
       </div>
 
@@ -233,7 +233,7 @@
           배우자에게 이 코드를 전달해 주세요.<br>배우자가 가입 후 입력하면 즉시 동기화됩니다.
         </p>
         <button class="btn-gradient-primary" onclick="shareInviteCodeNative()">💌 초대장 공유하기</button>
-        <button class="btn-close" style="margin-top:8px;" onclick="checkSession()">가계부로 이동하기</button>
+        <button class="btn-close" style="margin-top:8px; background:var(--primary); color:white; font-weight:700;" onclick="enterAppDirectly()">가계부로 바로 이동하기</button>
       </div>
     </div>
   </div>
@@ -558,7 +558,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '16.1';
+    const APP_VERSION = '16.2';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -666,7 +666,7 @@
           try {
             const { data: newProfile } = await supabaseClient
               .from('profiles')
-              .upsert([{ id: currentUser.id, email: currentUser.email, nickname: '사용자' }])
+              .upsert({ id: currentUser.id, email: currentUser.email, nickname: '사용자' }, { onConflict: 'id' })
               .select()
               .single();
             if (newProfile) profile = newProfile;
@@ -746,7 +746,7 @@
           if (error) throw error;
 
           if (data.user) {
-            await supabaseClient.from('profiles').upsert([{ id: data.user.id, email: email, nickname: nickname || '사용자' }]);
+            await supabaseClient.from('profiles').upsert({ id: data.user.id, email: email, nickname: nickname || '사용자' }, { onConflict: 'id' });
             if (!data.session) {
               alert(`[${email}] 주소로 인증 메일이 발송되었습니다.\n메일함에서 인증 링크를 클릭한 뒤 로그인해 주세요.`);
               setAuthMode(false);
@@ -790,11 +790,29 @@
 
       if (error) return alert('방 생성 실패: ' + error.message);
 
-      await supabaseClient.from('profiles').upsert([{ id: currentUser.id, email: currentUser.email, household_id: household.id }]);
+      const { error: profErr } = await supabaseClient
+        .from('profiles')
+        .upsert({ 
+          id: currentUser.id, 
+          email: currentUser.email, 
+          household_id: household.id 
+        }, { onConflict: 'id' });
+
+      if (profErr) return alert('프로필 연동 실패: ' + profErr.message);
+
+      currentHousehold = household;
       newlyCreatedInviteCode = code;
       document.getElementById('newlyCreatedCode').innerText = code;
+      document.getElementById('displayInviteCode').innerText = `🔗 ${code}`;
+      document.getElementById('settingsInviteCodeText').innerText = code;
+
       document.getElementById('pairingOptions').style.display = 'none';
       document.getElementById('shareInviteArea').style.display = 'block';
+    }
+
+    async function enterAppDirectly() {
+      showView('app');
+      await initApp();
     }
 
     function showJoinHouseholdInput() {
@@ -811,17 +829,42 @@
       const code = document.getElementById('joinInviteCode').value.trim().toUpperCase();
       if (!code) return alert('초대 코드를 입력해주세요.');
 
-      const { data: household, error } = await supabaseClient
-        .from('households')
-        .select('*')
-        .eq('invite_code', code)
-        .maybeSingle();
+      const joinBtn = document.getElementById('joinSubmitBtn');
+      joinBtn.innerText = '연결 중...';
+      joinBtn.disabled = true;
 
-      if (error || !household) return alert('존재하지 않는 초대 코드입니다.');
+      try {
+        const { data: household, error } = await supabaseClient
+          .from('households')
+          .select('*')
+          .eq('invite_code', code)
+          .maybeSingle();
 
-      await supabaseClient.from('profiles').upsert([{ id: currentUser.id, email: currentUser.email, household_id: household.id }]);
-      alert('2gether 가계부 매칭이 완료되었습니다!');
-      await checkSession();
+        if (error || !household) throw new Error('존재하지 않는 초대 코드입니다. 코드를 다시 확인해 주세요.');
+
+        const { error: profError } = await supabaseClient
+          .from('profiles')
+          .upsert({ 
+            id: currentUser.id, 
+            email: currentUser.email, 
+            household_id: household.id 
+          }, { onConflict: 'id' });
+
+        if (profError) throw profError;
+
+        currentHousehold = household;
+        document.getElementById('displayInviteCode').innerText = `🔗 ${household.invite_code}`;
+        document.getElementById('settingsInviteCodeText').innerText = household.invite_code;
+
+        alert('2gether 가계부 페어링이 완료되었습니다! 가계부로 이동합니다.');
+        showView('app');
+        await initApp();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        joinBtn.innerText = '연결 완료하고 시작하기';
+        joinBtn.disabled = false;
+      }
     }
 
     function shareInviteCodeNative() {
@@ -990,7 +1033,7 @@
       renderMainCategories();
     }
 
-    // --- 고정비 마스터 관리실 기능 (완벽 리팩토링) ---
+    // --- 고정비 마스터 관리실 기능 ---
     function openFixedMasterModal() {
       renderFixedMasterList();
       document.getElementById('fixedMasterModal').classList.add('open');
@@ -1014,13 +1057,11 @@
       }
     }
 
-    // 고유 고정비 템플릿만 추출
     function getUniqueRecurringTemplates() {
       const allRecurring = transactions.filter(t => t.is_recurring === true);
       const uniqueMap = new Map();
       allRecurring.forEach(t => {
         const key = t.title.trim().toLowerCase();
-        // 최신 생성된 템플릿 우선
         if (!uniqueMap.has(key)) {
           uniqueMap.set(key, t);
         }
@@ -1145,7 +1186,6 @@
       };
 
       if (editingMasterItem) {
-        // 기존 템플릿의 제목을 기준으로 모든 마스터 레코드 갱신
         await supabaseClient
           .from('transactions')
           .update(payload)
@@ -1165,7 +1205,6 @@
     async function deleteFixedMaster(title) {
       if (!confirm(`고정비 템플릿 '${title}'을(를) 마스터에서 삭제하시겠습니까?\n(마스터에서 삭제하면 다음 달부터 자동 생성되지 않습니다.)`)) return;
       
-      // 마스터 템플릿 플래그 레코드만 제거 (과거 거래 내역은 유지)
       await supabaseClient
         .from('transactions')
         .delete()
@@ -1237,7 +1276,7 @@
             payment: template.payment,
             memo: template.memo || '고정비 자동반영',
             author: template.author,
-            is_recurring: false // 당월 생성 거래는 false로 격리
+            is_recurring: false
           });
         }
       });
