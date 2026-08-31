@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -463,7 +462,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '15.1';
+    const APP_VERSION = '15.2';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -540,58 +539,89 @@
     let activeFilterTab = 'ALL';
     let currentMainView = 'ledger';
 
-    // --- 인증 & 온보딩 ---
+    // --- 인증 & 온보딩 (튕김 방지 및 안전 세션 복구) ---
     async function checkSession() {
       try {
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
-        if (error || !session) {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        
+        if (sessionError || !session || !session.user) {
           showView('auth');
           return;
         }
+
         currentUser = session.user;
         
-        let { data: profile } = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .maybeSingle();
-
-        if (!profile) {
-          const { data: newProfile } = await supabaseClient
+        // 1. 프로필 조회 시도
+        let profile = null;
+        try {
+          const { data, error } = await supabaseClient
             .from('profiles')
-            .upsert([{ id: currentUser.id, email: currentUser.email, nickname: '사용자' }])
-            .select()
-            .single();
-          profile = newProfile;
+            .select('*')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+            
+          if (!error && data) {
+            profile = data;
+          }
+        } catch (e) {
+          console.warn('프로필 조회 예외:', e);
         }
 
-        if (!profile || !profile.household_id) {
-          showView('onboarding');
-        } else {
-          const { data: household } = await supabaseClient
-            .from('households')
-            .select('*')
-            .eq('id', profile.household_id)
-            .maybeSingle();
-
-          if (household) {
-            currentHousehold = household;
-            document.getElementById('displayInviteCode').innerText = `🔗 ${currentHousehold.invite_code}`;
-            document.getElementById('settingsInviteCodeText').innerText = currentHousehold.invite_code;
-            showView('app');
-            await initApp();
-          } else {
-            showView('onboarding');
+        // 프로필 데이터가 없으면 안전하게 생성
+        if (!profile) {
+          try {
+            const { data: newProfile, error: upsertErr } = await supabaseClient
+              .from('profiles')
+              .upsert([{ 
+                id: currentUser.id, 
+                email: currentUser.email, 
+                nickname: '사용자' 
+              }])
+              .select()
+              .single();
+            if (!upsertErr && newProfile) profile = newProfile;
+          } catch (e) {
+            console.warn('프로필 생성 예외:', e);
           }
         }
+
+        // 2. 가계부 연결 여부 확인
+        if (!profile || !profile.household_id) {
+          showView('onboarding');
+          return;
+        }
+
+        // 3. 가계부 방 정보 조회
+        const { data: household, error: houseErr } = await supabaseClient
+          .from('households')
+          .select('*')
+          .eq('id', profile.household_id)
+          .maybeSingle();
+
+        if (household) {
+          currentHousehold = household;
+          document.getElementById('displayInviteCode').innerText = `🔗 ${currentHousehold.invite_code}`;
+          document.getElementById('settingsInviteCodeText').innerText = currentHousehold.invite_code;
+          showView('app');
+          await initApp();
+        } else {
+          showView('onboarding');
+        }
       } catch (err) {
-        showView('auth');
+        console.error('세션 체크 중 예외 발생:', err);
+        if (!currentUser) {
+          showView('auth');
+        } else {
+          showView('onboarding');
+        }
       }
     }
 
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !currentUser && session) {
-        await checkSession();
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        if (!currentUser || (currentUser && currentUser.id !== session.user.id)) {
+          await checkSession();
+        }
       } else if (event === 'SIGNED_OUT') {
         currentUser = null;
         currentHousehold = null;
@@ -1148,7 +1178,7 @@
       if (!currentHousehold) return;
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       
-      // [수정됨] 템플릿 중복 누적 방지: 제목과 금액이 같은 반복 항목은 고유 1개만 템플릿으로 취급
+      // 템플릿 중복 누적 방지: 제목과 금액이 같은 반복 항목은 고유 1개만 템플릿으로 취급
       const allRecurring = transactions.filter(t => t.is_recurring === true);
       const uniqueTemplatesMap = new Map();
       allRecurring.forEach(t => {
@@ -1489,5 +1519,3 @@
   </script>
 </body>
 </html>
-
-```
