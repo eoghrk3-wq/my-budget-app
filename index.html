@@ -66,8 +66,8 @@
     .nav-arrow-btn { background: none; border: none; font-size: 0.8rem; color: var(--subtext); cursor: pointer; padding: 2px 4px; }
     .nav-month-text { font-size: 0.88rem; font-weight: 800; color: var(--text); }
     .navbar-actions { display: flex; align-items: center; gap: 6px; }
-    .btn-fixed-hub { font-size: 0.72rem; background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; padding: 4px 8px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 2px; }
-    .code-badge-sm { font-size: 0.7rem; background: var(--primary-light); color: var(--primary); padding: 4px 8px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .btn-fixed-hub { font-size: 0.72rem; background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; padding: 5px 9px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 3px; }
+    .code-badge-sm { font-size: 0.7rem; background: var(--primary-light); color: var(--primary); padding: 5px 8px; border-radius: 12px; font-weight: 700; cursor: pointer; }
     .btn-icon-nav { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--subtext); padding: 4px; }
 
     .dashboard-card { background: var(--card); margin: 12px 16px 14px; padding: 18px 18px 14px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
@@ -99,7 +99,7 @@
     .t-info { display: flex; flex-direction: column; gap: 2px; }
     .t-title { font-size: 0.88rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .t-sub { font-size: 0.72rem; color: var(--subtext); display: flex; align-items: center; gap: 4px; }
-    .t-badge-repeat { font-size: 0.62rem; color: #DC2626; background: #FEE2E2; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
+    .t-badge-repeat { font-size: 0.62rem; color: #B45309; background: #FEF3C7; padding: 1px 5px; border-radius: 4px; font-weight: 800; border: 1px solid #FDE68A; }
 
     .t-row-right { text-align: right; }
     .t-amount { font-size: 0.92rem; font-weight: 800; }
@@ -146,10 +146,10 @@
     .type-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
     .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    /* 고정비 마스터 관리실 전용 UI */
+    /* 고정비 마스터 관리실 UI */
     .master-summary-box { background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; }
     .master-card { background: #FFFFFF; border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .master-card-left { display: flex; align-items: center; gap: 10px; }
+    .master-card-left { display: flex; align-items: center; gap: 10px; max-width: 60%; }
     .master-actions { display: flex; gap: 6px; }
     .btn-m-action { background: #F1F5F9; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; color: var(--subtext); }
     .btn-m-action.danger { color: #DC2626; background: #FEE2E2; border-color: #FECACA; }
@@ -357,11 +357,11 @@
         <div class="category-grid" style="margin-bottom:8px;">
           <div>
             <label class="form-label">대분류</label>
-            <input type="text" id="mMainCat" class="form-input" placeholder="예: 대출, 보험, 통신" />
+            <input type="text" id="mMainCat" class="form-input" placeholder="예: 고정비, 대출, 보험" />
           </div>
           <div>
             <label class="form-label">중분류</label>
-            <input type="text" id="mSubCat" class="form-input" placeholder="예: 집단대출, 암보험" />
+            <input type="text" id="mSubCat" class="form-input" placeholder="예: 대출, 보험, 통신" />
           </div>
         </div>
 
@@ -471,11 +471,6 @@
         <select id="txPayment" class="form-input"></select>
       </div>
 
-      <div class="checkbox-group">
-        <input type="checkbox" id="txIsRecurring" style="width:18px; height:18px;" />
-        <label for="txIsRecurring">고정비 마스터로 등록 (매월 자동 반영)</label>
-      </div>
-
       <div class="form-group">
         <label class="form-label">메모 (선택)</label>
         <input type="text" id="txMemo" class="form-input" placeholder="비고 입력" />
@@ -563,7 +558,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '16.0';
+    const APP_VERSION = '16.1';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -589,7 +584,7 @@
     let isFetching = false;
 
     // 고정비 마스터 상태
-    let editingMasterId = null;
+    let editingMasterItem = null;
     let selectedMasterFlow = '지출';
 
     const defaultCategories = {
@@ -995,7 +990,7 @@
       renderMainCategories();
     }
 
-    // --- 고정비 마스터 관리실 기능 ---
+    // --- 고정비 마스터 관리실 기능 (완벽 리팩토링) ---
     function openFixedMasterModal() {
       renderFixedMasterList();
       document.getElementById('fixedMasterModal').classList.add('open');
@@ -1019,11 +1014,13 @@
       }
     }
 
+    // 고유 고정비 템플릿만 추출
     function getUniqueRecurringTemplates() {
       const allRecurring = transactions.filter(t => t.is_recurring === true);
       const uniqueMap = new Map();
       allRecurring.forEach(t => {
-        const key = `${t.title.trim()}__${Number(t.amount)}__${t.main_category}`;
+        const key = t.title.trim().toLowerCase();
+        // 최신 생성된 템플릿 우선
         if (!uniqueMap.has(key)) {
           uniqueMap.set(key, t);
         }
@@ -1039,7 +1036,7 @@
       templates.forEach(t => {
         const amt = Number(t.amount) || 0;
         const flow = t.flow_type || t.type;
-        if (flow === '저축') savingTotal += amt;
+        if (flow === '저축' || flow === 'SAVING') savingTotal += amt;
         else fixedTotal += amt;
       });
 
@@ -1055,7 +1052,7 @@
 
       container.innerHTML = templates.map(t => {
         const flow = t.flow_type || t.type;
-        const isSaving = (flow === '저축');
+        const isSaving = (flow === '저축' || flow === 'SAVING');
         const emoji = getCategoryEmoji(t.main_category, t.sub_category || '', flow);
         const day = (t.date ? String(t.date).split('-')[2] : '01') || '01';
 
@@ -1066,7 +1063,7 @@
               <div>
                 <div style="font-size:0.88rem; font-weight:800; color:var(--text);">${t.title}</div>
                 <div style="font-size:0.72rem; color:var(--subtext);">
-                  ${t.main_category} > ${t.sub_category || '일반'} · 매월 ${Number(day)}일 · ${t.payment || '자동이체'}
+                  ${t.main_category || '고정비'} > ${t.sub_category || '일반'} · 매월 ${Number(day)}일 · ${t.payment || '자동이체'}
                 </div>
               </div>
             </div>
@@ -1076,7 +1073,7 @@
               </div>
               <div class="master-actions" style="margin-top:4px;">
                 <button class="btn-m-action" onclick='openEditFixedMaster(${JSON.stringify(t)})'>수정</button>
-                <button class="btn-m-action danger" onclick="deleteFixedMaster(${t.id}, '${t.title}')">삭제</button>
+                <button class="btn-m-action danger" onclick="deleteFixedMaster('${t.title.replace(/'/g, "\\'")}')">삭제</button>
               </div>
             </div>
           </div>
@@ -1085,7 +1082,7 @@
     }
 
     function openNewFixedMasterForm() {
-      editingMasterId = null;
+      editingMasterItem = null;
       document.getElementById('masterFormTitle').innerText = '➕ 고정비 템플릿 추가';
       document.getElementById('mTitle').value = '';
       document.getElementById('mAmount').value = '';
@@ -1097,7 +1094,7 @@
     }
 
     function openEditFixedMaster(t) {
-      editingMasterId = t.id;
+      editingMasterItem = t;
       document.getElementById('masterFormTitle').innerText = '✏️ 고정비 템플릿 수정';
       document.getElementById('mTitle').value = t.title || '';
       document.getElementById('mAmount').value = t.amount || '';
@@ -1113,7 +1110,7 @@
 
     function closeMasterFormArea() {
       document.getElementById('masterFormArea').style.display = 'none';
-      editingMasterId = null;
+      editingMasterItem = null;
     }
 
     async function saveFixedMasterTemplate() {
@@ -1147,8 +1144,14 @@
         is_recurring: true
       };
 
-      if (editingMasterId) {
-        await supabaseClient.from('transactions').update(payload).eq('id', editingMasterId);
+      if (editingMasterItem) {
+        // 기존 템플릿의 제목을 기준으로 모든 마스터 레코드 갱신
+        await supabaseClient
+          .from('transactions')
+          .update(payload)
+          .eq('household_id', currentHousehold.id)
+          .eq('is_recurring', true)
+          .eq('title', editingMasterItem.title);
       } else {
         await supabaseClient.from('transactions').insert([payload]);
       }
@@ -1156,12 +1159,20 @@
       closeMasterFormArea();
       await loadTransactions();
       renderFixedMasterList();
-      alert('고정비 마스터 정보가 저장되었습니다.');
+      alert('고정비 마스터 정보가 안전하게 저장되었습니다.');
     }
 
-    async function deleteFixedMaster(id, title) {
-      if (!confirm(`고정비 템플릿 '${title}'을(를) 삭제하시겠습니까?\n(마스터에서 삭제하면 다음 달부터 자동 생성되지 않습니다.)`)) return;
-      await supabaseClient.from('transactions').delete().eq('id', id);
+    async function deleteFixedMaster(title) {
+      if (!confirm(`고정비 템플릿 '${title}'을(를) 마스터에서 삭제하시겠습니까?\n(마스터에서 삭제하면 다음 달부터 자동 생성되지 않습니다.)`)) return;
+      
+      // 마스터 템플릿 플래그 레코드만 제거 (과거 거래 내역은 유지)
+      await supabaseClient
+        .from('transactions')
+        .delete()
+        .eq('household_id', currentHousehold.id)
+        .eq('is_recurring', true)
+        .eq('title', title);
+
       await loadTransactions();
       renderFixedMasterList();
     }
@@ -1172,7 +1183,7 @@
       alert(`${currentYear}년 ${currentMonth}월 고정비가 동기화되었습니다!`);
     }
 
-    // --- 중복 제거 및 당월 고정비 자동 생성 로직 (증식 버그 완전 해결) ---
+    // --- 중복 제거 및 고정비 자동 생성 로직 ---
     async function cleanupDuplicateTransactions() {
       if (!currentHousehold || transactions.length === 0) return;
       const seen = new Set();
@@ -1181,7 +1192,7 @@
       transactions.forEach(t => {
         if (!t.date || !t.title) return;
         const dStr = String(t.date).split('T')[0];
-        const key = `${t.household_id}_${dStr}_${t.title.trim()}_${Number(t.amount)}_${t.main_category}`;
+        const key = `${t.household_id}_${dStr}_${t.title.trim()}_${Number(t.amount)}_${t.is_recurring ? 'REC' : 'NORM'}`;
         if (seen.has(key)) {
           duplicateIds.push(t.id);
         } else {
@@ -1190,7 +1201,6 @@
       });
 
       if (duplicateIds.length > 0) {
-        console.log(`중복 고정비 데이터 ${duplicateIds.length}건 자동 청소 중...`);
         await supabaseClient.from('transactions').delete().in('id', duplicateIds);
         transactions = transactions.filter(t => !duplicateIds.includes(t.id));
       }
@@ -1227,7 +1237,7 @@
             payment: template.payment,
             memo: template.memo || '고정비 자동반영',
             author: template.author,
-            is_recurring: false // [핵심] 생성된 인스턴스는 false로 저장하여 템플릿 중복 증식 원천 방지!
+            is_recurring: false // 당월 생성 거래는 false로 격리
           });
         }
       });
@@ -1303,7 +1313,7 @@
       render();
     }
 
-    // --- 가계부 등록/수정/삭제 모달 로직 ---
+    // --- 일반 거래 등록/수정/삭제 ---
     function openModal() { 
       editingTxId = null;
       document.getElementById('modalTitleText').innerText = '가계부 등록';
@@ -1311,7 +1321,6 @@
       document.getElementById('txTitle').value = '';
       document.getElementById('txAmount').value = '';
       document.getElementById('txMemo').value = '';
-      document.getElementById('txIsRecurring').checked = false;
       applyLastUsedFlowType();
       setDateWheelValues(currentYear, currentMonth, today.getDate());
       document.getElementById('datePanel').classList.remove('open');
@@ -1377,7 +1386,6 @@
       document.getElementById('txTitle').value = tx.title || '';
       document.getElementById('txAmount').value = tx.amount || '';
       document.getElementById('txPayment').value = tx.payment || payments[0];
-      document.getElementById('txIsRecurring').checked = !!tx.is_recurring;
       document.getElementById('txMemo').value = tx.memo || '';
 
       document.getElementById('inputModal').classList.add('open');
@@ -1405,7 +1413,6 @@
       const payment = document.getElementById('txPayment').value;
       const memo = document.getElementById('txMemo').value.trim();
       const author = document.getElementById('txAuthor').value;
-      const is_recurring = document.getElementById('txIsRecurring').checked;
 
       if (!title || !amount || !date) return alert('내용과 금액을 입력해주세요.');
 
@@ -1426,7 +1433,7 @@
         payment: payment, 
         memo: memo, 
         author: author, 
-        is_recurring: is_recurring 
+        is_recurring: false 
       };
 
       const saveBtn = document.getElementById('saveBtn');
@@ -1550,6 +1557,7 @@
           const isInc = (flow === '수입' || flow === 'INCOME');
           const emoji = getCategoryEmoji(t.main_category, t.sub_category || '', flow);
           const catLabel = t.sub_category || t.main_category || t.category || '기타';
+          const isFixedItem = (t.main_category === '고정비' || t.memo === '고정비 자동반영');
 
           return `
             <div class="timeline-row" onclick='openDetailModal(${JSON.stringify(t)})'>
@@ -1561,7 +1569,7 @@
                     <span>${catLabel}</span>
                     <span>·</span>
                     <span>${t.payment || '기타'}</span>
-                    ${t.is_recurring ? `<span class="t-badge-repeat">마스터</span>` : ''}
+                    ${isFixedItem ? `<span class="t-badge-repeat">고정비</span>` : ''}
                   </div>
                 </div>
               </div>
@@ -1671,7 +1679,7 @@
       }).join('');
     }
 
-    // --- 설정 메뉴 카테고리/결제수단 관리 ---
+    // --- 설정 메뉴 ---
     function renderSettings() {
       const targetMainSelect = document.getElementById('targetMainCatSelect');
       let options = [];
