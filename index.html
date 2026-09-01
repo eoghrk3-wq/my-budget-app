@@ -65,24 +65,29 @@
     .boot-spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: boot-spin 0.7s linear infinite; }
     @keyframes boot-spin { to { transform: rotate(360deg); } }
     
-    /* 상단 헤더: 자연스러운 밸런스와 안정적인 패딩 */
-    .top-navbar { background: var(--card); padding: 12px 16px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
-    .nav-left { display: flex; justify-content: flex-start; align-items: center; }
-    .navbar-month-control { display: inline-flex; align-items: center; gap: 2px; background: #F1F5F9; padding: 4px 8px; border-radius: 16px; }
-    .nav-arrow-btn { background: none; border: none; font-size: 0.75rem; color: var(--subtext); cursor: pointer; padding: 2px 5px; }
-    .nav-month-text { font-size: 0.82rem; font-weight: 800; color: var(--text); min-width: 46px; text-align: center; }
-    
+    /* 상단 헤더: 중앙 로고 & 우측 설정 전용 (완벽한 좌우 대칭) */
+    .top-navbar { 
+      background: var(--card); 
+      padding: 12px 16px; 
+      display: grid; 
+      grid-template-columns: 40px 1fr 40px; 
+      align-items: center; 
+      border-bottom: 1px solid var(--border); 
+      position: sticky; 
+      top: 0; 
+      z-index: 20; 
+    }
+    .nav-left { width: 40px; }
     .nav-center { display: flex; justify-content: center; align-items: center; }
-    .brand-logo-top {
-  height: 28px;
-  width: auto;
-  max-width: 140px;
-  object-fit: contain;
-  cursor: pointer;
-  display: block;
-}
-    
-    .nav-right { display: flex; justify-content: flex-end; align-items: center; }
+    .brand-logo-top { 
+      height: 28px; 
+      width: auto; 
+      max-width: 140px; 
+      object-fit: contain; 
+      cursor: pointer; 
+      display: block; 
+    }
+    .nav-right { display: flex; justify-content: flex-end; align-items: center; width: 40px; }
     .btn-icon-nav { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--subtext); padding: 2px; display: flex; align-items: center; justify-content: center; }
 
     /* 플로팅 액션 버튼 (FAB) */
@@ -111,10 +116,16 @@
       box-shadow: 0 3px 8px rgba(79, 70, 229, 0.3);
     }
 
+    /* 대시보드 카드 & 카드 우측 상단 월 선택기 */
     .dashboard-card { background: var(--card); margin: 12px 14px 12px; padding: 18px 16px 14px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-    .dash-main-header { margin-bottom: 14px; }
-    .dash-main-title { font-size: 0.78rem; font-weight: 600; color: var(--subtext); margin-bottom: 4px; }
-    .dash-main-amount { font-size: 1.7rem; font-weight: 900; letter-spacing: -0.5px; }
+    .dash-main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .dash-main-title { font-size: 0.8rem; font-weight: 700; color: var(--subtext); }
+    
+    .card-month-control { display: inline-flex; align-items: center; gap: 2px; background: #F1F5F9; padding: 3px 8px; border-radius: 14px; border: 1px solid var(--border); }
+    .card-arrow-btn { background: none; border: none; font-size: 0.72rem; color: var(--subtext); cursor: pointer; padding: 2px 4px; }
+    .card-month-text { font-size: 0.78rem; font-weight: 800; color: var(--text); min-width: 44px; text-align: center; }
+
+    .dash-main-amount { font-size: 1.7rem; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 12px; }
     .dash-mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; border-top: 1px solid #F1F5F9; padding-top: 12px; text-align: center; }
     .mini-stat { display: flex; flex-direction: column; gap: 2px; }
     .mini-stat.interactive { cursor: pointer; border-radius: 8px; padding: 2px 0; transition: background 0.15s; }
@@ -332,15 +343,9 @@
   </div>
 
   <div id="appView">
-    <!-- 상단 헤더 (좌: ◀ N월 ▶ | 중: logo.png (균형감 있는 높이) | 우: ⚙️) -->
+    <!-- 상단 헤더 (중앙: logo.png | 우측: ⚙️) -->
     <div class="top-navbar">
-      <div class="nav-left">
-        <div class="navbar-month-control">
-          <button class="nav-arrow-btn" onclick="changeMonth(-1)">◀</button>
-          <span class="nav-month-text" id="currentMonthText">9월</span>
-          <button class="nav-arrow-btn" onclick="changeMonth(1)">▶</button>
-        </div>
-      </div>
+      <div class="nav-left"></div>
       
       <div class="nav-center">
         <img src="logo.png" alt="2gether" class="brand-logo-top" onclick="switchMainView('ledger')" onerror="this.outerHTML='<span style=\'font-size:1.15rem; font-weight:900; color:var(--primary);\'>2gether</span>'" />
@@ -356,8 +361,14 @@
       <div class="dashboard-card">
         <div class="dash-main-header">
           <div class="dash-main-title">이번 달 잔여 자산</div>
-          <div class="dash-main-amount" id="netBalance">0원</div>
+          <div class="card-month-control">
+            <button class="card-arrow-btn" onclick="changeMonth(-1)">◀</button>
+            <span class="card-month-text" id="dashCardMonthText">9월</span>
+            <button class="card-arrow-btn" onclick="changeMonth(1)">▶</button>
+          </div>
         </div>
+        <div class="dash-main-amount" id="netBalance">0원</div>
+        
         <div class="dash-mini-grid">
           <div class="mini-stat"><span class="mini-stat-label">수입</span><span class="mini-stat-val text-income" id="totalIncome">0</span></div>
           <div class="mini-stat"><span class="mini-stat-label">변동 소비</span><span class="mini-stat-val text-expense" id="totalExpense">0</span></div>
@@ -652,12 +663,12 @@
       <button class="btn-force-refresh" onclick="forceRefreshApp()">🔄 최신 버전으로 강제 새로고침 (캐시 갱신)</button>
       <button class="btn-close" style="margin-top:8px; background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="handleLogout()">로그아웃</button>
       <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:6px;">설정 완료</button>
-      <div class="app-version-badge">2gether v18.5</div>
+      <div class="app-version-badge">2gether v18.6</div>
     </div>
   </div>
 
   <script>
-    const APP_VERSION = '18.5';
+    const APP_VERSION = '18.6';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -1046,7 +1057,7 @@
     }
 
     function updateMonthText() {
-      document.getElementById('currentMonthText').innerText = `${currentMonth}월`;
+      document.getElementById('dashCardMonthText').innerText = `${currentMonth}월`;
     }
 
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
