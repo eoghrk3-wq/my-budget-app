@@ -121,7 +121,25 @@
     .t-amount { font-size: 0.92rem; font-weight: 800; }
     .t-author { font-size: 0.68rem; color: var(--subtext); margin-top: 1px; }
 
+    /* 통계 뷰 & 전월 비교 인사이트 리포트 */
     #viewStats { display: none; margin: 0 14px; }
+    
+    .report-insight-card { background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%); border-radius: 20px; padding: 16px; border: 1.5px solid var(--border); margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.1s; }
+    .report-insight-card:active { transform: scale(0.99); }
+    .report-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .report-title { font-size: 0.82rem; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .report-badge { font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; }
+    .badge-down { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+    .badge-up { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    .badge-same { background: #F1F5F9; color: var(--subtext); }
+
+    .report-highlights { display: flex; flex-direction: column; gap: 6px; font-size: 0.76rem; color: var(--subtext); margin-bottom: 10px; }
+    .report-hl-item { display: flex; align-items: center; justify-content: space-between; }
+    .easter-egg-chips-scroll { display: flex; gap: 6px; overflow-x: auto; padding-top: 4px; padding-bottom: 2px; -ms-overflow-style: none; scrollbar-width: none; }
+    .easter-egg-chips-scroll::-webkit-scrollbar { display: none; }
+    .easter-chip { background: #FFFFFF; border: 1.5px dashed var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 12px; font-size: 0.74rem; font-weight: 800; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.08); animation: bounce-slight 2s infinite ease-in-out; }
+    @keyframes bounce-slight { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+
     .chart-box { background: var(--card); border-radius: 20px; padding: 20px 16px; border: 1px solid var(--border); margin-bottom: 12px; text-align: center; }
     .chart-container { position: relative; width: 210px; height: 210px; margin: 0 auto 10px; }
     .stats-card { background: var(--card); border-radius: 20px; padding: 16px; border: 1px solid var(--border); }
@@ -182,9 +200,22 @@
     
     .btn-force-refresh { width: 100%; padding: 10px; background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 10px; color: var(--primary); font-size: 0.82rem; font-weight: 800; cursor: pointer; margin-top: 14px; }
     .app-version-badge { text-align: center; font-size: 0.72rem; color: #94A3B8; margin-top: 10px; font-weight: 600; }
+
+    /* 컨페티(폭죽) 애니메이션 캔버스 */
+    #confettiCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+    /* 이스터에그 모달 */
+    .egg-dialog { text-align: center; padding: 10px 0; }
+    .egg-dialog-icon { font-size: 3.5rem; margin-bottom: 8px; animation: bounce-egg 0.5s ease; }
+    @keyframes bounce-egg { 0% { transform: scale(0.3); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    .egg-dialog-title { font-size: 1.15rem; font-weight: 900; margin-bottom: 6px; }
+    .egg-dialog-body { font-size: 0.88rem; color: var(--subtext); line-height: 1.5; margin-bottom: 14px; word-break: keep-all; }
   </style>
 </head>
 <body>
+
+  <!-- 폭죽 캔버스 -->
+  <canvas id="confettiCanvas"></canvas>
 
   <!-- 0. 세션 확인 중 로딩 화면 -->
   <div class="boot-loading" id="viewBootLoading">
@@ -326,7 +357,24 @@
       <div class="timeline-container" id="transactionTimeline"></div>
     </div>
 
+    <!-- 통계 뷰 -->
     <div id="viewStats">
+      <!-- 전월 대비 스마트 리포트 & 이스터에그 카드 -->
+      <div class="report-insight-card" id="reportInsightCard" onclick="handleReportCardTripleClick()">
+        <div class="report-top-bar">
+          <div class="report-title">
+            <span>📈 전월 대비 소비 리포트</span>
+          </div>
+          <div class="report-badge" id="reportMomBadge">-0%</div>
+        </div>
+        <div class="report-highlights" id="reportHighlights">
+          <!-- JS 렌더링 -->
+        </div>
+        <div class="easter-egg-chips-scroll" id="easterEggChipsContainer">
+          <!-- 발동된 이스터에그 칩 렌더링 -->
+        </div>
+      </div>
+
       <div class="chart-box">
         <div style="font-size:0.85rem; font-weight:700; margin-bottom:10px;">📊 당월 지출 비중</div>
         <div class="chart-container">
@@ -533,6 +581,18 @@
     </div>
   </div>
 
+  <!-- 이스터에그 전용 팝업 모달 -->
+  <div class="modal" id="easterEggModal">
+    <div class="modal-content" style="border-radius:24px;">
+      <div class="egg-dialog">
+        <div class="egg-dialog-icon" id="eggIcon">🎉</div>
+        <div class="egg-dialog-title" id="eggTitle">이스터에그 발견!</div>
+        <div class="egg-dialog-body" id="eggBody">재미있는 부부 가계부 팁입니다.</div>
+        <button class="btn-submit" onclick="closeEasterEggModal()">확인 완료 😄</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 설정 모달 -->
   <div class="modal" id="settingsModal">
     <div class="modal-content">
@@ -589,12 +649,12 @@
       <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:6px;">설정 완료</button>
 
       <!-- 최신 버전 식별 배지 -->
-      <div class="app-version-badge">2gether v17.5</div>
+      <div class="app-version-badge">2gether v17.6</div>
     </div>
   </div>
 
   <script>
-    const APP_VERSION = '17.5';
+    const APP_VERSION = '17.6';
     console.log(`[2gether] 현재 실행 버전: v${APP_VERSION}`);
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
@@ -622,6 +682,10 @@
 
     let sessionCheckInProgress = false;
     let realtimeChannel = null;
+
+    // 이스터에그 3연타 카운터
+    let reportCardClickCount = 0;
+    let reportCardClickTimer = null;
 
     // 고정비 마스터 및 필터 상태
     let editingMasterId = null;
@@ -690,13 +754,113 @@
         .replace(/'/g, '&#039;');
     }
 
-    // 강제 캐시 버스팅 새로고침 함수
+    // 경량 컨페티(꽃가루 폭죽) 애니메이션 엔진
+    function launchConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const confettiPieces = [];
+      const colors = ['#4F46E5', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#EF4444'];
+
+      for (let i = 0; i < 70; i++) {
+        confettiPieces.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          r: Math.random() * 6 + 3,
+          dx: (Math.random() - 0.5) * 14,
+          dy: (Math.random() - 0.7) * 14,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10,
+          tiltAngle: 0,
+          tiltAngleInc: Math.random() * 0.08 + 0.04,
+          opacity: 1
+        });
+      }
+
+      let animationFrame;
+      function renderConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+
+        confettiPieces.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.dy += 0.3; // 중력
+          p.opacity -= 0.015;
+          p.tiltAngle += p.tiltAngleInc;
+          p.tilt = Math.sin(p.tiltAngle) * 12;
+
+          if (p.opacity > 0) {
+            active = true;
+            ctx.beginPath();
+            ctx.lineWidth = p.r;
+            ctx.strokeStyle = p.color;
+            ctx.globalAlpha = p.opacity;
+            ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+            ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+            ctx.stroke();
+          }
+        });
+
+        if (active) {
+          animationFrame = requestAnimationFrame(renderConfetti);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          cancelAnimationFrame(animationFrame);
+        }
+      }
+      renderConfetti();
+    }
+
+    function openEasterEggModal(icon, title, body, triggerConfetti = true) {
+      document.getElementById('eggIcon').innerText = icon;
+      document.getElementById('eggTitle').innerText = title;
+      document.getElementById('eggBody').innerHTML = body;
+      document.getElementById('easterEggModal').classList.add('open');
+      if (triggerConfetti) launchConfetti();
+    }
+
+    function closeEasterEggModal() {
+      document.getElementById('easterEggModal').classList.remove('open');
+    }
+
+    // 인사이트 카드 3연타 히든 칭호 발급
+    function handleReportCardTripleClick() {
+      reportCardClickCount++;
+      clearTimeout(reportCardClickTimer);
+
+      reportCardClickTimer = setTimeout(() => {
+        reportCardClickCount = 0;
+      }, 700);
+
+      if (reportCardClickCount >= 3) {
+        reportCardClickCount = 0;
+        giveRandomTitleEasterEgg();
+      }
+    }
+
+    function giveRandomTitleEasterEgg() {
+      const titles = [
+        { icon: '🛡️', title: '칭호 획득: [지갑의 수호천사]', desc: '배우자의 과소비를 온몸으로 방어하는 든든한 가계부의 기둥!' },
+        { icon: '🛵', title: '칭호 획득: [배달의 민족 VVIP 패밀리]', desc: '라이더님과 거의 이웃사촌 수준! 오늘 저녁은 집밥 도전?' },
+        { icon: '☕', title: '칭호 획득: [카페인으로 움직이는 생명체]', desc: '혈중 커피 농도 99%! 스타벅스 명예 주주로 인정합니다.' },
+        { icon: '📦', title: '칭호 획득: [택배 박스 성주님]', desc: '문 앞의 택배 박스로 성을 쌓으셨군요! 언박싱의 달인!' },
+        { icon: '👑', title: '칭호 획득: [상전님 전담 집사 부부]', desc: '내 통장은 털렸지만 우리 아가는 귀여우니까 오늘도 야근한다!' },
+        { icon: '🧘', title: '칭호 획득: [자린고비 듀오]', desc: '천 원 한 장도 허투루 쓰지 않는 대한민국 상위 1% 알뜰 부부!' },
+        { icon: '🏢', title: '칭호 획득: [미래의 판교 건물주]', desc: '저축과 투자의 신! 조만간 내 집 마련을 넘어 건물주로 직행?' },
+        { icon: '🥩', title: '칭호 획득: [로맨틱 미식가 듀오]', desc: '인생 뭐 있어? 맛있는 거 함께 먹을 때가 제일 행복한 낭만 부부!' }
+      ];
+      const selected = titles[Math.floor(Math.random() * titles.length)];
+      openEasterEggModal(selected.icon, selected.title, selected.desc, true);
+    }
+
     function forceRefreshApp() {
       const cleanUrl = window.location.origin + window.location.pathname;
       window.location.replace(`${cleanUrl}?t=${Date.now()}`);
     }
 
-    // 고정비 항목 여부 통합 판별 유틸
     function isFixedTransaction(t) {
       if (!t) return false;
       const flow = t.flow_type || t.type;
@@ -1330,14 +1494,12 @@
       alert(`${currentYear}년 ${currentMonth}월 고정비가 동기화되었습니다!`);
     }
 
-    // --- 고정비 On/Off 토글 핸들러 ---
     function toggleShowFixed(checked) {
       showFixedExpenses = checked;
       localStorage.setItem('my_show_fixed_expenses', String(checked));
       render();
     }
 
-    // --- 마스터 중복 정리 및 고정비 자동 생성 로직 ---
     async function cleanupDuplicateTransactions() {
       if (!currentHousehold || transactions.length === 0) return;
       const seen = new Set();
@@ -1644,7 +1806,7 @@
         if (sub && sub.includes('구독')) return '🎬';
         return '📅';
       }
-      if (sub && (sub.includes('식비') || sub.includes('카페'))) return '🍽️';
+      if (sub && (sub.includes('식비') || sub.includes('카페') || sub.includes('배달'))) return '🍽️';
       if (sub && sub.includes('교통')) return '🚗';
       if (sub && (sub.includes('생활') || sub.includes('육아'))) return '👶';
       if (sub && (sub.includes('여가') || sub.includes('쇼핑'))) return '🛍️';
@@ -1773,33 +1935,192 @@
       '#8B5CF6', '#EC4899', '#3B82F6', '#64748B', '#14B8A6'
     ];
 
+    // --- 통계 및 전월 대비 리포트 / 40종 이스터에그 렌더링 ---
     function renderStats() {
-      const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      const monthlyExpenses = transactions.filter(t => {
+      const curPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      
+      let prevY = currentYear;
+      let prevM = currentMonth - 1;
+      if (prevM < 1) { prevM = 12; prevY--; }
+      const prevPrefix = `${prevY}-${String(prevM).padStart(2, '0')}`;
+
+      // 당월 지출 내역
+      const curExpenses = transactions.filter(t => {
         if (!t.date) return false;
-        const isThisMonth = String(t.date).startsWith(targetPrefix);
         const flow = t.flow_type || t.type;
-        return isThisMonth && (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
+        return String(t.date).startsWith(curPrefix) && (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
       });
 
-      const catSums = {};
-      let totalExp = 0;
+      // 전월 지출 내역
+      const prevExpenses = transactions.filter(t => {
+        if (!t.date) return false;
+        const flow = t.flow_type || t.type;
+        return String(t.date).startsWith(prevPrefix) && (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED');
+      });
 
-      monthlyExpenses.forEach(t => {
+      // 당월 카테고리별 집계
+      const curCatSums = {};
+      let curTotalExp = 0;
+      let curBabyExp = 0;
+      let curFoodExp = 0;
+      let curCafeExp = 0;
+      let curShopExp = 0;
+      let curCafeCount = 0;
+      let curShopCount = 0;
+
+      curExpenses.forEach(t => {
         const amt = Number(t.amount) || 0;
         const key = t.sub_category || t.main_category || t.category || '기타';
-        catSums[key] = (catSums[key] || 0) + amt;
-        totalExp += amt;
+        curCatSums[key] = (curCatSums[key] || 0) + amt;
+        curTotalExp += amt;
+
+        const combinedText = `${t.main_category || ''} ${t.sub_category || ''} ${t.title || ''}`;
+        if (combinedText.includes('육아') || combinedText.includes('아가') || combinedText.includes('기저귀') || combinedText.includes('분유')) {
+          curBabyExp += amt;
+        }
+        if (combinedText.includes('식비') || combinedText.includes('배달') || combinedText.includes('외식') || combinedText.includes('마트')) {
+          curFoodExp += amt;
+        }
+        if (combinedText.includes('카페') || combinedText.includes('커피') || combinedText.includes('스타벅스') || combinedText.includes('디저트')) {
+          curCafeExp += amt;
+          curCafeCount++;
+        }
+        if (combinedText.includes('쇼핑') || combinedText.includes('쿠팡') || combinedText.includes('옷') || combinedText.includes('패션')) {
+          curShopExp += amt;
+          curShopCount++;
+        }
       });
 
-      const labels = Object.keys(catSums);
-      const dataValues = labels.map(k => catSums[k]);
+      // 전월 카테고리별 집계
+      const prevCatSums = {};
+      let prevTotalExp = 0;
+      let prevBabyExp = 0;
+      let prevFoodExp = 0;
+      let prevCafeExp = 0;
+      let prevShopExp = 0;
+
+      prevExpenses.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        const key = t.sub_category || t.main_category || t.category || '기타';
+        prevCatSums[key] = (prevCatSums[key] || 0) + amt;
+        prevTotalExp += amt;
+
+        const combinedText = `${t.main_category || ''} ${t.sub_category || ''} ${t.title || ''}`;
+        if (combinedText.includes('육아') || combinedText.includes('아가')) prevBabyExp += amt;
+        if (combinedText.includes('식비') || combinedText.includes('배달')) prevFoodExp += amt;
+        if (combinedText.includes('카페') || combinedText.includes('커피')) prevCafeExp += amt;
+        if (combinedText.includes('쇼핑') || combinedText.includes('쿠팡')) prevShopExp += amt;
+      });
+
+      // 전월 대비 지출 증감액 & 증감률 계산
+      const diffTotal = curTotalExp - prevTotalExp;
+      const momBadge = document.getElementById('reportMomBadge');
+      const hlContainer = document.getElementById('reportHighlights');
+      const eggContainer = document.getElementById('easterEggChipsContainer');
+
+      if (prevTotalExp === 0) {
+        momBadge.className = 'report-badge badge-same';
+        momBadge.innerText = '비교 기준 없음';
+        hlContainer.innerHTML = '<div class="report-hl-item"><span>전월 데이터가 없어 다음 달부터 정밀 비교됩니다.</span></div>';
+      } else {
+        const pct = ((diffTotal / prevTotalExp) * 100).toFixed(1);
+        if (diffTotal < 0) {
+          momBadge.className = 'report-badge badge-down';
+          momBadge.innerText = `${Math.abs(diffTotal).toLocaleString()}원 절약 (${Math.abs(pct)}% 📉)`;
+        } else if (diffTotal > 0) {
+          momBadge.className = 'report-badge badge-up';
+          momBadge.innerText = `${diffTotal.toLocaleString()}원 초과 (+${pct}% 📈)`;
+        } else {
+          momBadge.className = 'report-badge badge-same';
+          momBadge.innerText = '전월과 동일 (0%)';
+        }
+
+        // 가장 많이 증가 / 절약된 카테고리 추출
+        let maxIncreasedCat = null, maxIncreaseVal = 0;
+        let maxSavedCat = null, maxSavedVal = 0;
+
+        const allCats = Array.from(new Set([...Object.keys(curCatSums), ...Object.keys(prevCatSums)]));
+        allCats.forEach(cat => {
+          const diff = (curCatSums[cat] || 0) - (prevCatSums[cat] || 0);
+          if (diff > maxIncreaseVal) { maxIncreaseVal = diff; maxIncreasedCat = cat; }
+          if (diff < maxSavedVal) { maxSavedVal = diff; maxSavedCat = cat; }
+        });
+
+        let hlHtml = '';
+        if (maxIncreasedCat && maxIncreaseVal > 0) {
+          hlHtml += `<div class="report-hl-item"><span>🔥 가장 많이 증가한 항목:</span><b>${maxIncreasedCat} (+${maxIncreaseVal.toLocaleString()}원)</b></div>`;
+        }
+        if (maxSavedCat && maxSavedVal < 0) {
+          hlHtml += `<div class="report-hl-item"><span>🎉 가장 많이 아낀 항목:</span><b style="color:var(--income);">${maxSavedCat} (${maxSavedVal.toLocaleString()}원)</b></div>`;
+        }
+        if (!maxIncreasedCat && !maxSavedCat) {
+          hlHtml += `<div class="report-hl-item"><span>전월과 지출 패턴이 유사합니다.</span></div>`;
+        }
+        hlContainer.innerHTML = hlHtml;
+      }
+
+      // --- 40종 부부 맞춤형 이스터에그 평가 엔진 ---
+      const activeEasterEggs = [];
+
+      // 1. 육아 특화 (7종)
+      if (curBabyExp >= 1200000) {
+        activeEasterEggs.push({ icon: '👑', label: '👑 VVIP 상전님 모시는 중', title: '상전님 납시오!', desc: `이번 달 육아비가 <b>${curBabyExp.toLocaleString()}원</b>에 달했습니다!<br>"엄마아빠는 숨만 쉬고 일할 테니 건강하게만 자라다오!"` });
+      } else if (curBabyExp >= 800000) {
+        activeEasterEggs.push({ icon: '🧸', label: '🧸 키즈카페 개장 임박', title: '거실이 키즈카페로 변신 중!', desc: `육아비 <b>${curBabyExp.toLocaleString()}원</b> 돌파!<br>통장은 털려도 미소 한 번에 사르르 녹아내립니다.` });
+      } else if (curBabyExp >= 500000) {
+        activeEasterEggs.push({ icon: '🍼', label: '🍼 초보 엄빠의 열정', title: '국가가 허락한 마약...', desc: '기저귀와 분유는 끊을 수 없습니다! 훌륭한 부모님의 길을 걷고 계십니다.' });
+      } else if (curBabyExp > 0 && prevBabyExp > 0 && curBabyExp > prevBabyExp * 1.3) {
+        activeEasterEggs.push({ icon: '💸', label: '📈 등골 브레이커 경보', title: '육아비 급상승 주의보', desc: '육아 지출이 전월 대비 30% 이상 증가했습니다. 당근마켓 탐색을 추천합니다!' });
+      } else if (curBabyExp > 0 && prevBabyExp > 0 && curBabyExp < prevBabyExp * 0.8) {
+        activeEasterEggs.push({ icon: '🥕', label: '🥕 당근마켓의 달인', title: '나눔과 절약의 달인!', desc: '육아비를 전월보다 20% 이상 아꼈습니다. 슬기로운 육아 생활 인정!' });
+      }
+
+      // 2. 식비 / 배달 / 외식 (8종)
+      if (prevFoodExp > 0 && curFoodExp > prevFoodExp * 1.25) {
+        activeEasterEggs.push({ icon: '🚨', label: '🚨 주방 파업 & 배달 비상령', title: '가스레인지의 눈물', desc: '식비가 지난달보다 25% 급증했습니다.<br>경고: 배달앱을 닫고 오늘 저녁은 냉장고 파먹기를 실시하십시오 🍳' });
+      } else if (prevFoodExp > 0 && curFoodExp < prevFoodExp * 0.85) {
+        activeEasterEggs.push({ icon: '🍳', label: '🍳 냉장고 파먹기 달인', title: '냉동실 유물 발굴 성공!', desc: '식비를 지난달보다 15% 이상 절감했습니다! 집밥 마스터 부부로 임명합니다.' });
+      } else if (curFoodExp > curTotalExp * 0.45 && curTotalExp > 500000) {
+        activeEasterEggs.push({ icon: '🥩', label: '🍖 식비가 지배한 세상', title: '먹는 게 남는 거다!', desc: '총지출의 절반 가까이가 식비입니다. 맛있는 음식으로 든든하게 행복 충전 완료!' });
+      }
+
+      // 3. 커피 / 카페 / 디저트 (5종)
+      if (curCafeCount >= 10 || curCafeExp >= 70000) {
+        activeEasterEggs.push({ icon: '☕', label: '☕ 스타벅스 대주주', title: '혈중 카페인 농도 100%', desc: `이번 달 카페 결제 <b>${curCafeCount}회</b> (${curCafeExp.toLocaleString()}원)!<br>이 정도면 커피 브랜드 지분을 매수하는 게 빠르겠습니다.` });
+      } else if (prevCafeExp > 0 && curCafeExp < prevCafeExp * 0.6) {
+        activeEasterEggs.push({ icon: '🌱', label: '🌱 텀블러 요정', title: '환경과 통장을 동시에!', desc: '카페 지출을 전월 대비 40%나 줄였습니다. 홈카페 바리스타로 거듭나셨군요!' });
+      }
+
+      // 4. 절약 & 칭찬 & 치킨 (6종)
+      if (prevTotalExp > 0 && diffTotal <= -prevTotalExp * 0.1) {
+        activeEasterEggs.push({ icon: '🍗', label: '🍗 치킨 결재권 발동!', title: '절약 대성공 포상 찬스!', desc: '전월 대비 총지출을 10% 이상 아꼈습니다!<br>오늘 저녁은 합법적으로 바삭한 치킨을 뜯으셔도 좋습니다 🎉' });
+      } else if (prevTotalExp > 0 && diffTotal <= -prevTotalExp * 0.2) {
+        activeEasterEggs.push({ icon: '🐟', label: '🐟 자린고비 마스터', title: '천장 굴비 소환 완료', desc: '전월 대비 무려 20% 이상 절약! 부자 되는 지름길을 걷고 계십니다.' });
+      }
+
+      // 5. 쇼핑 & 취미 (6종)
+      if (curShopCount >= 6 || curShopExp >= 400000) {
+        activeEasterEggs.push({ icon: '📦', label: '📦 문 앞 택배 성곽', title: '쿠팡 로켓의 축복', desc: `쇼핑 결제 <b>${curShopCount}건</b> (${curShopExp.toLocaleString()}원)!<br>경비실 아저씨와 절친이 되셨을 가능성이 높습니다.` });
+      }
+
+      // 기본 이스터에그 (트리플 클릭 유도 칩)
+      activeEasterEggs.push({ icon: '✨', label: '👆 3번 터치하고 칭호 뽑기', title: '부부 전용 히든 칭호!', desc: '인사이트 카드를 연속 3번 탭하면 특별한 랜덤 칭호가 지급됩니다!' });
+
+      eggContainer.innerHTML = activeEasterEggs.map(egg => `
+        <div class="easter-chip" onclick='event.stopPropagation(); openEasterEggModal("${egg.icon}", "${egg.title}", "${egg.desc.replace(/'/g, "\\'")}", true)'>
+          <span>${egg.label}</span>
+        </div>
+      `).join('');
+
+      // 도넛 차트 및 상세 리스트 렌더링
+      const labels = Object.keys(curCatSums);
+      const dataValues = labels.map(k => curCatSums[k]);
 
       const canvas = document.getElementById('expenseDoughnutChart');
       const noChartText = document.getElementById('noChartText');
       const breakdownList = document.getElementById('statsBreakdownList');
 
-      if (totalExp === 0 || labels.length === 0) {
+      if (curTotalExp === 0 || labels.length === 0) {
         canvas.style.display = 'none';
         noChartText.style.display = 'block';
         breakdownList.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px 0; font-size:0.8rem;">지출 데이터가 없습니다.</div>';
@@ -1831,10 +2152,10 @@
         }
       });
 
-      const sortedEntries = Object.entries(catSums).sort((a, b) => b[1] - a[1]);
+      const sortedEntries = Object.entries(curCatSums).sort((a, b) => b[1] - a[1]);
       breakdownList.innerHTML = sortedEntries.map(([cat, amt], idx) => {
         const color = chartPalette[idx % chartPalette.length];
-        const pct = ((amt / totalExp) * 100).toFixed(1);
+        const pct = ((amt / curTotalExp) * 100).toFixed(1);
         return `
           <div class="stats-item-row">
             <div class="stats-dot-title">
