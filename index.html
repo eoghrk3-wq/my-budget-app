@@ -83,13 +83,26 @@
     .mini-stat-label { font-size: 0.65rem; font-weight: 600; color: var(--subtext); }
     .mini-stat-val { font-size: 0.78rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .filter-control-bar { display: flex; justify-content: space-between; align-items: center; margin: 0 14px 10px; gap: 8px; }
+    /* 필터 바 & 다중 상세 필터 팝오버 드롭다운 */
+    .filter-control-bar { display: flex; justify-content: space-between; align-items: center; margin: 0 14px 10px; gap: 8px; position: relative; }
     .filter-pills-row { display: flex; gap: 4px; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
     .filter-pills-row::-webkit-scrollbar { display: none; }
     .pill-btn { padding: 5px 11px; border-radius: 16px; border: 1px solid var(--border); background: white; font-size: 0.74rem; font-weight: 700; color: var(--subtext); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
     .pill-btn.active { background: var(--text); color: white; border-color: var(--text); }
-    .fixed-toggle-label { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; color: var(--subtext); cursor: pointer; background: #F1F5F9; padding: 4px 8px; border-radius: 12px; white-space: nowrap; }
-    .fixed-toggle-label input { width: 13px; height: 13px; accent-color: var(--primary); cursor: pointer; }
+    
+    .filter-dropdown-wrap { position: relative; }
+    .filter-trigger-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 14px; border: 1px solid var(--border); background: #F1F5F9; font-size: 0.72rem; font-weight: 800; color: var(--text); cursor: pointer; white-space: nowrap; }
+    .filter-trigger-btn:active { background: #E2E8F0; }
+    
+    .filter-popover { display: none; position: absolute; right: 0; top: 32px; width: 180px; background: #FFFFFF; border: 1.5px solid var(--border); border-radius: 16px; padding: 12px 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 30; }
+    .filter-popover.open { display: block; }
+    .filter-popover-title { font-size: 0.7rem; font-weight: 800; color: var(--subtext); margin-bottom: 6px; }
+    .filter-popover-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+    .filter-popover-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: var(--text); cursor: pointer; }
+    .filter-popover-item input { accent-color: var(--primary); width: 14px; height: 14px; cursor: pointer; }
+    .filter-popover-divider { height: 1px; background: #F1F5F9; margin: 6px 0; }
+    .filter-popover-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .btn-filter-reset { background: none; border: none; font-size: 0.7rem; color: #EF4444; font-weight: 700; cursor: pointer; }
 
     .timeline-container { margin: 0 14px; }
     .date-group { margin-bottom: 14px; }
@@ -159,7 +172,7 @@
     .sch-title { font-size: 0.85rem; font-weight: 700; color: var(--text); }
     .sch-memo { font-size: 0.72rem; color: var(--subtext); }
 
-    /* 하단 도크 바 (3개 탭) */
+    /* 하단 도크 바 */
     .dock-navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 64px; background: var(--card); display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; border-top: 1px solid var(--border); z-index: 50; padding: 0 10px; }
     .dock-nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; font-size: 0.72rem; font-weight: 700; color: var(--subtext); cursor: pointer; gap: 2px; }
     .dock-nav-btn.active { color: var(--primary); }
@@ -311,6 +324,7 @@
         </div>
       </div>
 
+      <!-- 상단 필터 바 (유형 탭 + 상세 필터 팝오버) -->
       <div class="filter-control-bar">
         <div class="filter-pills-row">
           <button class="pill-btn active" onclick="switchFilterTab('ALL', event)">전체</button>
@@ -318,11 +332,34 @@
           <button class="pill-btn" onclick="switchFilterTab('수입', event)">수입</button>
           <button class="pill-btn" onclick="switchFilterTab('저축', event)">저축</button>
         </div>
-        <label class="fixed-toggle-label">
-          <input type="checkbox" id="chkShowFixed" onchange="toggleShowFixed(this.checked)" checked />
-          <span>고정비 포함</span>
-        </label>
+
+        <div class="filter-dropdown-wrap">
+          <button class="filter-trigger-btn" id="filterTriggerBtn" onclick="toggleFilterPopover(event)">
+            <span id="filterTriggerText">상세 필터</span>
+            <span>▾</span>
+          </button>
+          <div class="filter-popover" id="filterPopover" onclick="event.stopPropagation()">
+            <div class="filter-popover-title">작성자</div>
+            <div class="filter-popover-group">
+              <label class="filter-popover-item"><input type="checkbox" id="fChk-남편" onchange="onFilterCheckChanged()" /> 남편</label>
+              <label class="filter-popover-item"><input type="checkbox" id="fChk-아내" onchange="onFilterCheckChanged()" /> 아내</label>
+              <label class="filter-popover-item"><input type="checkbox" id="fChk-공동" onchange="onFilterCheckChanged()" /> 공동</label>
+            </div>
+            <div class="filter-popover-divider"></div>
+            <div class="filter-popover-title">비용 구분</div>
+            <div class="filter-popover-group">
+              <label class="filter-popover-item"><input type="checkbox" id="fChk-고정비" onchange="onFilterCheckChanged()" /> 고정비</label>
+              <label class="filter-popover-item"><input type="checkbox" id="fChk-변동비" onchange="onFilterCheckChanged()" /> 변동비</label>
+            </div>
+            <div class="filter-popover-divider"></div>
+            <div class="filter-popover-actions">
+              <button class="btn-filter-reset" onclick="resetAdvancedFilter()">초기화</button>
+              <button class="pill-btn" style="padding:3px 8px; font-size:0.68rem;" onclick="closeFilterPopover()">닫기</button>
+            </div>
+          </div>
+        </div>
       </div>
+
       <div class="timeline-container" id="transactionTimeline"></div>
     </div>
 
@@ -365,7 +402,7 @@
       </div>
     </div>
 
-    <!-- 하단 3개 탭 도크 네비게이션 -->
+    <!-- 하단 도크 네비게이션 -->
     <div class="dock-navbar">
       <button class="dock-nav-btn active" id="navLedgerBtn" onclick="switchMainView('ledger')">
         <span style="font-size:1.25rem;">📝</span>
@@ -567,12 +604,12 @@
       <button class="btn-force-refresh" onclick="forceRefreshApp()">🔄 최신 버전으로 강제 새로고침 (캐시 갱신)</button>
       <button class="btn-close" style="margin-top:8px; background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="handleLogout()">로그아웃</button>
       <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:6px;">설정 완료</button>
-      <div class="app-version-badge">2gether v18.1</div>
+      <div class="app-version-badge">2gether v18.2</div>
     </div>
   </div>
 
   <script>
-    const APP_VERSION = '18.1';
+    const APP_VERSION = '18.2';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -599,7 +636,12 @@
 
     let editingMasterId = null;
     let selectedMasterFlow = '지출';
-    let showFixedExpenses = localStorage.getItem('my_show_fixed_expenses') !== 'false';
+
+    // 상세 필터 다중 선택 상태 (작성자 + 고정비/변동비)
+    let advancedFilters = {
+      authors: [], // ['남편', '아내', '공동'] 중 선택된 항목
+      costTypes: [] // ['고정비', '변동비'] 중 선택된 항목
+    };
 
     let editingScheduleId = null;
     let selectedCalendarDate = '';
@@ -634,14 +676,9 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
-    // 달력 전용 한국식 금액 축약 포맷터
     function formatCompactWon(num) {
       const n = Math.abs(Number(num) || 0);
       if (n === 0) return '0';
-      if (n >= 1000000) {
-        const man = n / 10000;
-        return (man % 1 === 0 ? man : man.toFixed(1)) + '만';
-      }
       if (n >= 10000) {
         const man = n / 10000;
         return (man % 1 === 0 ? man : man.toFixed(1)) + '만';
@@ -706,6 +743,73 @@
       const main = t.main_category || '';
       const memo = t.memo || '';
       return (t.is_recurring === true || main === '고정비' || flow === 'FIXED' || memo.includes('고정비'));
+    }
+
+    /* --- 상세 필터 팝오버 핸들러 --- */
+    function toggleFilterPopover(e) {
+      if (e) e.stopPropagation();
+      const popover = document.getElementById('filterPopover');
+      popover.classList.toggle('open');
+    }
+
+    function closeFilterPopover() {
+      document.getElementById('filterPopover').classList.remove('open');
+    }
+
+    // 문서 바깥 클릭 시 팝오버 닫기
+    document.addEventListener('click', (e) => {
+      const popover = document.getElementById('filterPopover');
+      const trigger = document.getElementById('filterTriggerBtn');
+      if (popover && popover.classList.contains('open')) {
+        if (!popover.contains(e.target) && !trigger.contains(e.target)) {
+          closeFilterPopover();
+        }
+      }
+    });
+
+    function onFilterCheckChanged() {
+      const selAuthors = [];
+      ['남편', '아내', '공동'].forEach(a => {
+        const chk = document.getElementById(`fChk-${a}`);
+        if (chk && chk.checked) selAuthors.push(a);
+      });
+
+      const selCostTypes = [];
+      ['고정비', '변동비'].forEach(c => {
+        const chk = document.getElementById(`fChk-${c}`);
+        if (chk && chk.checked) selCostTypes.push(c);
+      });
+
+      advancedFilters.authors = selAuthors;
+      advancedFilters.costTypes = selCostTypes;
+
+      updateFilterTriggerText();
+      render();
+    }
+
+    function updateFilterTriggerText() {
+      const totalSelected = advancedFilters.authors.length + advancedFilters.costTypes.length;
+      const btnText = document.getElementById('filterTriggerText');
+      if (totalSelected === 0) {
+        btnText.innerText = '상세 필터';
+      } else {
+        const labels = [...advancedFilters.authors, ...advancedFilters.costTypes];
+        if (labels.length <= 2) {
+          btnText.innerText = labels.join(', ');
+        } else {
+          btnText.innerText = `${labels[0]} 외 ${labels.length - 1}`;
+        }
+      }
+    }
+
+    function resetAdvancedFilter() {
+      ['남편', '아내', '공동', '고정비', '변동비'].forEach(k => {
+        const chk = document.getElementById(`fChk-${k}`);
+        if (chk) chk.checked = false;
+      });
+      advancedFilters = { authors: [], costTypes: [] };
+      updateFilterTriggerText();
+      render();
     }
 
     async function checkSession() {
@@ -857,7 +961,6 @@
     }
 
     async function initApp() {
-      document.getElementById('chkShowFixed').checked = showFixedExpenses;
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       selectedCalendarDate = todayStr;
       updateMonthText();
@@ -1013,7 +1116,6 @@
         const isToday = (today.getFullYear() === currentYear && today.getMonth() + 1 === currentMonth && today.getDate() === d);
         const isSelected = (selectedCalendarDate === dStr);
 
-        // 해당일 지출 & 수입 합계 집계
         const dayTxs = transactions.filter(t => t.date && String(t.date).startsWith(dStr));
         let dayExpSum = 0;
         let dayIncSum = 0;
@@ -1025,7 +1127,6 @@
           else if (flow === '지출' || flow === 'FIXED') dayExpSum += amt;
         });
 
-        // 해당일 일정
         const daySchs = schedules.filter(s => s.date && String(s.date).startsWith(dStr));
         const dotsHtml = daySchs.slice(0, 3).map(s => `<span class="cal-dot dot-${s.author || '공동'}"></span>`).join('');
 
@@ -1333,14 +1434,29 @@
       netElem.innerText = (net >= 0 ? '+' : '') + net.toLocaleString() + '원';
       netElem.style.color = net >= 0 ? 'var(--text)' : 'var(--expense)';
 
+      // 1) 좌측 탭 필터링 (전체/지출/수입/저축) + 2) 우측 상세 다중 필터링 (작성자 + 고정비/변동비)
       const filtered = monthlyData.filter(t => {
         const flow = t.flow_type || t.type;
         const isFixed = isFixedTransaction(t);
-        if (!showFixedExpenses && isFixed) return false;
-        if (activeFilterTab === 'ALL') return true;
-        if (activeFilterTab === '지출') return flow === '지출' || flow === 'FIXED';
-        if (activeFilterTab === '수입') return flow === '수입';
-        if (activeFilterTab === '저축') return flow === '저축';
+        const author = t.author || '공동';
+
+        // 1. 좌측 탭
+        if (activeFilterTab === '지출' && !(flow === '지출' || flow === 'FIXED')) return false;
+        if (activeFilterTab === '수입' && flow !== '수입') return false;
+        if (activeFilterTab === '저축' && flow !== '저축') return false;
+
+        // 2. 우측 상세 필터: 작성자 (OR 조건)
+        if (advancedFilters.authors.length > 0) {
+          if (!advancedFilters.authors.includes(author)) return false;
+        }
+
+        // 3. 우측 상세 필터: 비용 구분 (OR 조건)
+        if (advancedFilters.costTypes.length > 0) {
+          const isMatchFixed = advancedFilters.costTypes.includes('고정비') && isFixed;
+          const isMatchVariable = advancedFilters.costTypes.includes('변동비') && !isFixed;
+          if (!isMatchFixed && !isMatchVariable) return false;
+        }
+
         return true;
       });
 
@@ -1451,7 +1567,6 @@
         hlContainer.innerHTML = `<div class="report-hl-item"><span>총 지출 추이:</span><b>${diffTotal <= 0 ? '알뜰하게 절약 중 👍' : '지출 관리 주의보 ⚠️'}</b></div>`;
       }
 
-      // 이스터에그 칩
       const eggs = [];
       if (curBabyExp >= 800000) eggs.push({ icon: '👑', label: '👑 VVIP 상전님 모시는 중', title: '상전님 납시오!', desc: '육아비 80만 원 돌파! 엄마아빠 오늘도 힘내서 돈 벌어올게요 🍼' });
       if (curFoodExp > 500000) eggs.push({ icon: '🚨', label: '🚨 배달 비상령', title: '주방 파업 주의보', desc: '외식/배달비 비중이 높습니다. 오늘 저녁은 냉장고 파먹기 어떠세요? 🍳' });
@@ -1597,12 +1712,6 @@
       await autoApplyRecurringExpenses();
       await loadAllData();
       alert('고정비 동기화 완료!');
-    }
-
-    function toggleShowFixed(checked) {
-      showFixedExpenses = checked;
-      localStorage.setItem('my_show_fixed_expenses', String(checked));
-      render();
     }
 
     async function autoApplyRecurringExpenses() {
