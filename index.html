@@ -6,6 +6,12 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  
+  <!-- iOS PWA 메타태그 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="2gether" />
+  
   <title>2gether - 둘이 함께 쓰는 스마트 가계부</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -173,6 +179,9 @@
     .btn-del-main { background: none; border: none; color: #EF4444; font-size: 0.7rem; font-weight: 600; cursor: pointer; }
     .add-row { display: flex; gap: 6px; margin-top: 6px; }
     .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+    
+    .btn-force-refresh { width: 100%; padding: 10px; background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 10px; color: var(--primary); font-size: 0.82rem; font-weight: 800; cursor: pointer; margin-top: 14px; }
+    .app-version-badge { text-align: center; font-size: 0.72rem; color: #94A3B8; margin-top: 10px; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -575,13 +584,18 @@
       </div>
       <div class="chip-container" id="paymentChips" style="margin-top:8px;"></div>
 
-      <button class="btn-close" style="margin-top:16px; background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="handleLogout()">로그아웃</button>
+      <button class="btn-force-refresh" onclick="forceRefreshApp()">🔄 최신 버전으로 강제 새로고침 (캐시 갱신)</button>
+      <button class="btn-close" style="margin-top:8px; background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="handleLogout()">로그아웃</button>
       <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:6px;">설정 완료</button>
+
+      <!-- 최신 버전 식별 배지 -->
+      <div class="app-version-badge">2gether v17.5</div>
     </div>
   </div>
 
   <script>
-    const APP_VERSION = '17.3';
+    const APP_VERSION = '17.5';
+    console.log(`[2gether] 현재 실행 버전: v${APP_VERSION}`);
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -612,7 +626,7 @@
     // 고정비 마스터 및 필터 상태
     let editingMasterId = null;
     let selectedMasterFlow = '지출';
-    let showFixedExpenses = localStorage.getItem('my_show_fixed_expenses') !== 'false'; // 기본 true
+    let showFixedExpenses = localStorage.getItem('my_show_fixed_expenses') !== 'false';
 
     const defaultCategories = {
       "수입": {
@@ -674,6 +688,26 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    // 강제 캐시 버스팅 새로고침 함수
+    function forceRefreshApp() {
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.location.replace(`${cleanUrl}?t=${Date.now()}`);
+    }
+
+    // 고정비 항목 여부 통합 판별 유틸
+    function isFixedTransaction(t) {
+      if (!t) return false;
+      const flow = t.flow_type || t.type;
+      const main = t.main_category || '';
+      const memo = t.memo || '';
+      return (
+        t.is_recurring === true ||
+        main === '고정비' ||
+        flow === 'FIXED' ||
+        memo.includes('고정비')
+      );
     }
 
     // --- 인증 & 세션 복구 ---
@@ -1260,6 +1294,7 @@
         amount: amount,
         payment: payment,
         author: author,
+        memo: '고정비 마스터',
         is_recurring: true
       };
 
@@ -1353,7 +1388,7 @@
             title: template.title,
             amount: template.amount,
             payment: template.payment,
-            memo: template.memo || '고정비 자동반영',
+            memo: '고정비 자동반영',
             author: template.author,
             is_recurring: false
           });
@@ -1625,12 +1660,12 @@
       monthlyData.forEach(t => {
         const amt = Number(t.amount) || 0;
         const flow = t.flow_type || t.type;
-        const main = t.main_category || '';
+        const isFixed = isFixedTransaction(t);
 
         if (flow === '수입' || flow === 'INCOME') inc += amt;
         else if (flow === '저축' || flow === 'SAVING') sav += amt;
         else if (flow === '지출' || flow === 'EXPENSE' || flow === 'FIXED') {
-          if (main === '고정비' || flow === 'FIXED') fix += amt;
+          if (isFixed) fix += amt;
           else exp += amt;
         }
       });
@@ -1648,9 +1683,8 @@
       // 필터링 적용 (고정비 On/Off 옵션 A 적용)
       const filtered = monthlyData.filter(t => {
         const flow = t.flow_type || t.type;
-        const isFixed = (t.main_category === '고정비' || t.memo === '고정비 자동반영' || flow === 'FIXED');
+        const isFixed = isFixedTransaction(t);
 
-        // 고정비 체크 해제 시 리스트에서 고정비 숨김
         if (!showFixedExpenses && isFixed) return false;
 
         if (activeFilterTab === 'ALL') return true;
@@ -1694,7 +1728,7 @@
           const isInc = (flow === '수입' || flow === 'INCOME');
           const emoji = getCategoryEmoji(t.main_category, t.sub_category || '', flow);
           const catLabel = t.sub_category || t.main_category || t.category || '기타';
-          const isFixedItem = (t.main_category === '고정비' || t.memo === '고정비 자동반영');
+          const isFixedItem = isFixedTransaction(t);
 
           return `
             <div class="timeline-row" onclick="openDetailModalById(${t.id})">
