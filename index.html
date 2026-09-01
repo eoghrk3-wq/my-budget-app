@@ -132,19 +132,22 @@
 
     /* 일정 (캘린더) 뷰 스타일 */
     #viewCalendar { display: none; margin: 0 14px; }
-    .calendar-card { background: var(--card); border-radius: 20px; padding: 16px 12px 14px; border: 1px solid var(--border); margin-bottom: 14px; }
+    .calendar-card { background: var(--card); border-radius: 20px; padding: 16px 10px 14px; border: 1px solid var(--border); margin-bottom: 14px; }
     .cal-weekdays-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.72rem; font-weight: 800; color: var(--subtext); margin-bottom: 8px; }
-    .cal-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-    .cal-cell { min-height: 54px; border-radius: 10px; padding: 4px 2px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: background 0.1s; position: relative; }
+    .cal-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-cell { min-height: 58px; border-radius: 10px; padding: 4px 1px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: background 0.1s; position: relative; overflow: hidden; }
     .cal-cell:active, .cal-cell.selected { background: var(--primary-light); }
     .cal-cell.today .cal-num { background: var(--primary); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
     .cal-num { font-size: 0.78rem; font-weight: 700; margin-bottom: 2px; }
-    .cal-dots-wrap { display: flex; gap: 2px; margin-bottom: 2px; }
+    .cal-dots-wrap { display: flex; gap: 2px; min-height: 6px; align-items: center; margin-bottom: 2px; }
     .cal-dot { width: 5px; height: 5px; border-radius: 50%; }
     .dot-공동 { background: #8B5CF6; }
     .dot-남편 { background: #3B82F6; }
     .dot-아내 { background: #10B981; }
-    .cal-exp-text { font-size: 0.6rem; color: var(--expense); font-weight: 700; transform: scale(0.9); }
+    .cal-money-wrap { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 100%; }
+    .cal-money-item { font-size: 0.62rem; font-weight: 800; line-height: 1; letter-spacing: -0.5px; white-space: nowrap; }
+    .cal-money-item.inc { color: var(--income); }
+    .cal-money-item.exp { color: var(--expense); }
 
     .schedule-panel { background: var(--card); border-radius: 20px; padding: 16px; border: 1px solid var(--border); }
     .schedule-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -384,15 +387,11 @@
     <div class="modal-content">
       <div class="modal-title" id="schModalTitle">새 일정 등록</div>
       <div class="form-group">
-        <label class="form-label">일정 날짜</label>
-        <input type="date" id="schDateInput" class="form-input" />
-      </div>
-      <div class="form-group">
         <label class="form-label">구분</label>
         <select id="schAuthorInput" class="form-input">
-          <option value="공동">공동 일정 (보라)</option>
-          <option value="남편">남편 일정 (파랑)</option>
-          <option value="아내">아내 일정 (초록)</option>
+          <option value="공동">공동</option>
+          <option value="남편">남편</option>
+          <option value="아내">아내</option>
         </select>
       </div>
       <div class="form-group">
@@ -568,12 +567,12 @@
       <button class="btn-force-refresh" onclick="forceRefreshApp()">🔄 최신 버전으로 강제 새로고침 (캐시 갱신)</button>
       <button class="btn-close" style="margin-top:8px; background:#FEE2E2; color:#DC2626; font-weight:700;" onclick="handleLogout()">로그아웃</button>
       <button class="btn-close" onclick="closeSettingsModal()" style="margin-top:6px;">설정 완료</button>
-      <div class="app-version-badge">2gether v18.0</div>
+      <div class="app-version-badge">2gether v18.1</div>
     </div>
   </div>
 
   <script>
-    const APP_VERSION = '18.0';
+    const APP_VERSION = '18.1';
 
     const SUPABASE_URL = 'https://xaaokumihhpdssqjfbfo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYW9rdW1paGhwZHNzcWpmYmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Njk1NjYsImV4cCI6MjEwMzE0NTU2Nn0.8VQzrOuBV-fc7P1RaPOnBEZ7FOeVe-zJHYvaO-RoVZ8';
@@ -593,6 +592,7 @@
     let schedules = [];
     let doughnutChartInstance = null;
     let isFetching = false;
+    let isSavingSchedule = false;
 
     let sessionCheckInProgress = false;
     let realtimeChannel = null;
@@ -632,6 +632,25 @@
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    // 달력 전용 한국식 금액 축약 포맷터
+    function formatCompactWon(num) {
+      const n = Math.abs(Number(num) || 0);
+      if (n === 0) return '0';
+      if (n >= 1000000) {
+        const man = n / 10000;
+        return (man % 1 === 0 ? man : man.toFixed(1)) + '만';
+      }
+      if (n >= 10000) {
+        const man = n / 10000;
+        return (man % 1 === 0 ? man : man.toFixed(1)) + '만';
+      }
+      if (n >= 1000) {
+        const cheon = n / 1000;
+        return (cheon % 1 === 0 ? cheon : cheon.toFixed(1)) + '천';
+      }
+      return n.toLocaleString();
     }
 
     function launchConfetti() {
@@ -982,7 +1001,6 @@
       const grid = document.getElementById('calendarGrid');
       const firstDayIndex = new Date(currentYear, currentMonth - 1, 1).getDay();
       const lastDate = new Date(currentYear, currentMonth, 0).getDate();
-      
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       
       let html = '';
@@ -995,9 +1013,17 @@
         const isToday = (today.getFullYear() === currentYear && today.getMonth() + 1 === currentMonth && today.getDate() === d);
         const isSelected = (selectedCalendarDate === dStr);
 
-        // 해당일 지출 합계
-        const dayExpenses = transactions.filter(t => t.date && String(t.date).startsWith(dStr) && (t.flow_type === '지출' || t.type === '지출' || t.flow_type === 'FIXED'));
-        const dayExpSum = dayExpenses.reduce((acc, cur) => acc + Number(cur.amount || 0), 0);
+        // 해당일 지출 & 수입 합계 집계
+        const dayTxs = transactions.filter(t => t.date && String(t.date).startsWith(dStr));
+        let dayExpSum = 0;
+        let dayIncSum = 0;
+
+        dayTxs.forEach(t => {
+          const amt = Number(t.amount || 0);
+          const flow = t.flow_type || t.type;
+          if (flow === '수입') dayIncSum += amt;
+          else if (flow === '지출' || flow === 'FIXED') dayExpSum += amt;
+        });
 
         // 해당일 일정
         const daySchs = schedules.filter(s => s.date && String(s.date).startsWith(dStr));
@@ -1007,7 +1033,10 @@
           <div class="cal-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="selectCalendarDate('${dStr}')">
             <span class="cal-num">${d}</span>
             <div class="cal-dots-wrap">${dotsHtml}</div>
-            ${dayExpSum > 0 ? `<span class="cal-exp-text">-${Math.round(dayExpSum/1000)}k</span>` : ''}
+            <div class="cal-money-wrap">
+              ${dayIncSum > 0 ? `<span class="cal-money-item inc">+${formatCompactWon(dayIncSum)}</span>` : ''}
+              ${dayExpSum > 0 ? `<span class="cal-money-item exp">-${formatCompactWon(dayExpSum)}</span>` : ''}
+            </div>
           </div>
         `;
       }
@@ -1052,8 +1081,10 @@
 
     function openScheduleModal() {
       editingScheduleId = null;
-      document.getElementById('schModalTitle').innerText = '새 일정 등록';
-      document.getElementById('schDateInput').value = selectedCalendarDate || getSelectedDateString();
+      const targetDate = selectedCalendarDate || getSelectedDateString();
+      const dt = new Date(targetDate);
+      document.getElementById('schModalTitle').innerText = `${dt.getMonth() + 1}월 ${dt.getDate()}일 (${dayNames[dt.getDay()]}) 일정 등록`;
+      document.getElementById('saveSchBtn').innerText = '저장하기';
       document.getElementById('schAuthorInput').value = '공동';
       document.getElementById('schTitleInput').value = '';
       document.getElementById('schMemoInput').value = '';
@@ -1064,8 +1095,9 @@
       const sch = schedules.find(s => s.id === id);
       if (!sch) return;
       editingScheduleId = sch.id;
-      document.getElementById('schModalTitle').innerText = '일정 수정';
-      document.getElementById('schDateInput').value = sch.date;
+      const dt = new Date(sch.date);
+      document.getElementById('schModalTitle').innerText = `${dt.getMonth() + 1}월 ${dt.getDate()}일 (${dayNames[dt.getDay()]}) 일정 수정`;
+      document.getElementById('saveSchBtn').innerText = '수정 완료';
       document.getElementById('schAuthorInput').value = sch.author || '공동';
       document.getElementById('schTitleInput').value = sch.title || '';
       document.getElementById('schMemoInput').value = sch.memo || '';
@@ -1075,30 +1107,43 @@
     function closeScheduleModal() { document.getElementById('scheduleModal').classList.remove('open'); }
 
     async function saveSchedule() {
-      if (!currentHousehold) return;
-      const date = document.getElementById('schDateInput').value;
+      if (!currentHousehold || isSavingSchedule) return;
+      
+      const targetDate = selectedCalendarDate || getSelectedDateString();
       const author = document.getElementById('schAuthorInput').value;
       const title = document.getElementById('schTitleInput').value.trim();
       const memo = document.getElementById('schMemoInput').value.trim();
 
-      if (!date || !title) return alert('날짜와 일정 내용을 입력해주세요.');
+      if (!title) return alert('일정 내용을 입력해주세요.');
+
+      isSavingSchedule = true;
+      const saveBtn = document.getElementById('saveSchBtn');
+      saveBtn.innerText = '저장 중...';
+      saveBtn.disabled = true;
 
       const payload = {
         household_id: currentHousehold.id,
-        date: date,
+        date: targetDate,
         author: author,
         title: title,
         memo: memo
       };
 
-      if (editingScheduleId) {
-        await supabaseClient.from('schedules').update(payload).eq('id', editingScheduleId);
-      } else {
-        await supabaseClient.from('schedules').insert([payload]);
+      try {
+        if (editingScheduleId) {
+          await supabaseClient.from('schedules').update(payload).eq('id', editingScheduleId);
+        } else {
+          await supabaseClient.from('schedules').insert([payload]);
+        }
+        closeScheduleModal();
+        await loadAllData();
+      } catch (err) {
+        alert('일정 저장 실패: ' + err.message);
+      } finally {
+        isSavingSchedule = false;
+        saveBtn.innerText = '저장하기';
+        saveBtn.disabled = false;
       }
-
-      closeScheduleModal();
-      await loadAllData();
     }
 
     async function deleteSchedule(id) {
